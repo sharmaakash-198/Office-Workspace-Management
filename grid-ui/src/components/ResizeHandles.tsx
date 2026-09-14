@@ -1,20 +1,14 @@
 import React from 'react';
-import type { Entity } from '../types/geometry';
-import { entityBounds } from '../geometry/entities';
+import type { Entity } from '../types/floorplan';
+import { entityWorldBounds } from '../geometry/cells';
 
-export type ResizeHandle =
-  | 'nw'
-  | 'n'
-  | 'ne'
-  | 'e'
-  | 'se'
-  | 's'
-  | 'sw'
-  | 'w';
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 interface ResizeHandlesProps {
   entity: Entity;
   zoom: number;
+  /** Canonical cell size in world units. */
+  a: number;
   onHandleDown: (handle: ResizeHandle, e: React.MouseEvent) => void;
 }
 
@@ -58,8 +52,13 @@ const CURSOR: Record<ResizeHandle, string> = {
   w: 'ew-resize',
 };
 
-const ResizeHandles: React.FC<ResizeHandlesProps> = ({ entity, zoom, onHandleDown }) => {
-  const b = entityBounds(entity);
+const ResizeHandles: React.FC<ResizeHandlesProps> = ({
+  entity,
+  zoom,
+  a,
+  onHandleDown,
+}) => {
+  const b = entityWorldBounds(entity, a);
   const size = 8 / zoom;
 
   return (

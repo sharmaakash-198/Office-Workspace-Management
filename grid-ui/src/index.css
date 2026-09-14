@@ -674,3 +674,101 @@ body,
     grid-template-columns: 160px 1fr 200px;
   }
 }
+
+/* ── Dimension panel (shown inside library when item is armed) ── */
+.dim-panel {
+  margin: 4px 0 6px 0;
+  padding: 10px 10px 8px;
+  background: var(--accent-bg);
+  border: 1px solid var(--toggle-active-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dim-panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--toggle-active-text);
+}
+
+.dim-panel-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.dim-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.dim-field input {
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border-hi);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  width: 100%;
+}
+
+.dim-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+.dim-sep {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.dim-panel-meta {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  color: var(--text-muted);
+  min-height: 14px;
+}
+
+.dim-reset-btn {
+  align-self: flex-start;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.dim-reset-btn:hover {
+  border-color: var(--border-hi);
+  color: var(--text-secondary);
+}
+
+/* ── Dimension label rendered on top of each placed entity ── */
+.entity-dim-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: inherit;
+  fill: var(--text-primary);
+  paint-order: stroke fill;
+  stroke: var(--bg-panel);
+  stroke-width: 4;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+

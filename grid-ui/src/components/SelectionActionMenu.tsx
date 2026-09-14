@@ -4,34 +4,45 @@ interface SelectionActionMenuProps {
   x: number;
   y: number;
   cellCount: number;
-  onMarkPolygon: () => void;
+  onCreateArea: () => void;
+  onCreateRoom: () => void;
+  onSaveAsShape: () => void;
   onClear: () => void;
 }
 
-/** Floating menu near a multi-cell selection. */
 const SelectionActionMenu: React.FC<SelectionActionMenuProps> = ({
   x,
   y,
   cellCount,
-  onMarkPolygon,
+  onCreateArea,
+  onCreateRoom,
+  onSaveAsShape,
   onClear,
-}) => {
-  return (
-    <div
-      className="selection-action-menu"
-      style={{ left: x, top: y }}
-      role="menu"
-      onMouseDown={(e) => e.stopPropagation()}
+}) => (
+  <div
+    className="selection-menu"
+    style={{ left: x, top: y }}
+    onMouseDown={(e) => e.stopPropagation()}
+  >
+    <span className="selection-count">{cellCount} cell(s)</span>
+    <button type="button" className="toolbar-btn" onClick={onCreateArea}>
+      Make area
+    </button>
+    <button type="button" className="toolbar-btn" onClick={onCreateRoom}>
+      Make room
+    </button>
+    <button
+      type="button"
+      className="toolbar-btn"
+      onClick={onSaveAsShape}
+      title="Add this footprint to the library so it can be reused"
     >
-      <span className="selection-action-count">{cellCount} cells</span>
-      <button type="button" className="selection-action-btn" onClick={onMarkPolygon}>
-        Mark as polygon
-      </button>
-      <button type="button" className="selection-action-btn ghost" onClick={onClear}>
-        Clear
-      </button>
-    </div>
-  );
-};
+      Save as shape
+    </button>
+    <button type="button" className="toolbar-btn" onClick={onClear}>
+      Clear
+    </button>
+  </div>
+);
 
 export default SelectionActionMenu;

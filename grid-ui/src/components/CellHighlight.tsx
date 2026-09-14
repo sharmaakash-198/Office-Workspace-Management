@@ -1,56 +1,49 @@
 import React from 'react';
-import type { CellRef } from '../types/geometry';
-import { cellToWorldRect } from '../geometry/grid';
+import type { GridCell } from '../types/floorplan';
 
 interface CellHighlightProps {
-  hoveredCell: CellRef | null;
-  selectedCells: CellRef[];
-  baseUnit: number;
+  hoveredCell: GridCell | null;
+  selectedCells: GridCell[];
+  /** Canonical cell size in world units. */
+  a: number;
+  /** Size of the hover brush in cells, matching the active snap step. */
+  hoverSpan?: number;
 }
 
 const CellHighlight: React.FC<CellHighlightProps> = ({
   hoveredCell,
   selectedCells,
-  baseUnit,
+  a,
+  hoverSpan = 1,
 }) => {
-  const selectedKeys = new Set(
-    selectedCells.map((c) => `${c.level}:${c.col}:${c.row}`),
-  );
+  const selectedKeys = new Set(selectedCells.map((c) => `${c.x},${c.y}`));
 
   return (
     <g id="cell-highlight" pointerEvents="none">
-      {hoveredCell &&
-        !selectedKeys.has(`${hoveredCell.level}:${hoveredCell.col}:${hoveredCell.row}`) &&
-        (() => {
-          const r = cellToWorldRect(hoveredCell, baseUnit);
-          return (
-            <rect
-              x={r.x}
-              y={r.y}
-              width={r.width}
-              height={r.height}
-              className="cell-hover"
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-            />
-          );
-        })()}
+      {hoveredCell && !selectedKeys.has(`${hoveredCell.x},${hoveredCell.y}`) && (
+        <rect
+          x={hoveredCell.x * a}
+          y={hoveredCell.y * a}
+          width={a * hoverSpan}
+          height={a * hoverSpan}
+          className="cell-hover"
+          strokeWidth={1}
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
 
-      {selectedCells.map((cell) => {
-        const r = cellToWorldRect(cell, baseUnit);
-        return (
-          <rect
-            key={`${cell.level}:${cell.col}:${cell.row}`}
-            x={r.x}
-            y={r.y}
-            width={r.width}
-            height={r.height}
-            className="cell-selected"
-            strokeWidth={1.5}
-            vectorEffect="non-scaling-stroke"
-          />
-        );
-      })}
+      {selectedCells.map((cell) => (
+        <rect
+          key={`${cell.x},${cell.y}`}
+          x={cell.x * a}
+          y={cell.y * a}
+          width={a}
+          height={a}
+          className="cell-selected"
+          strokeWidth={1.5}
+          vectorEffect="non-scaling-stroke"
+        />
+      ))}
     </g>
   );
 };

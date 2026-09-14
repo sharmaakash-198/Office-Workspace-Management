@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Viewport } from '../types/viewport';
-import type { EditorTool } from '../types/geometry';
+import type { EditorTool } from '../types/floorplan';
 import { listDrafts } from '../lib/drafts';
 
 interface ToolbarProps {
@@ -8,59 +8,91 @@ interface ToolbarProps {
   tool: EditorTool;
   showGrid: boolean;
   snapEnabled: boolean;
+  showCoordinates: boolean;
   includeGridOnExport: boolean;
   theme: 'dark' | 'light';
   canUndo: boolean;
   canRedo: boolean;
   canPaste: boolean;
+  hasSelection: boolean;
   onTool: (tool: EditorTool) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitFloor: () => void;
+  onResetView: () => void;
   onToggleGrid: () => void;
   onToggleSnap: () => void;
+  onToggleCoordinates: () => void;
   onToggleExportGrid: () => void;
   onToggleTheme: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onCopy: () => void;
   onPaste: () => void;
+  onDuplicate: () => void;
+  onRotate: (quarterTurns: number) => void;
+  onDelete: () => void;
   onHowToUse: () => void;
   onSaveDraft: (name: string) => void;
   onLoadDraft: (name: string) => void;
   onExportPng: () => void;
   onExportSvg: () => void;
   onExportPdf: () => void;
+  onExportJson: () => void;
+  onCopyJson: () => void;
+  onImportJson: (text: string) => void;
 }
+
+const TOOLS: { id: EditorTool; label: string; hint: string }[] = [
+  { id: 'select', label: 'Select', hint: 'Select and move (V)' },
+  { id: 'pan', label: 'Pan', hint: 'Pan the camera (H)' },
+  { id: 'area', label: 'Area', hint: 'Drag cells to build an area (A)' },
+  { id: 'wall', label: 'Wall', hint: 'Click grid vertices; Enter or double-click to finish (W)' },
+  { id: 'seat', label: 'Seat', hint: 'Click to place a seat (S)' },
+  { id: 'desk', label: 'Desk', hint: 'Click to place a desk (D)' },
+  { id: 'room', label: 'Room', hint: 'Drag to place a room (R)' },
+  { id: 'plant', label: 'Plant', hint: 'Click to place a plant (P)' },
+  { id: 'delete', label: 'Erase', hint: 'Click objects to erase (E)' },
+];
 
 const Toolbar: React.FC<ToolbarProps> = ({
   viewport,
   tool,
   showGrid,
   snapEnabled,
+  showCoordinates,
   includeGridOnExport,
   theme,
   canUndo,
   canRedo,
   canPaste,
+  hasSelection,
   onTool,
   onZoomIn,
   onZoomOut,
   onFitFloor,
+  onResetView,
   onToggleGrid,
   onToggleSnap,
+  onToggleCoordinates,
   onToggleExportGrid,
   onToggleTheme,
   onUndo,
   onRedo,
   onCopy,
   onPaste,
+  onDuplicate,
+  onRotate,
+  onDelete,
   onHowToUse,
   onSaveDraft,
   onLoadDraft,
   onExportPng,
   onExportSvg,
   onExportPdf,
+  onExportJson,
+  onCopyJson,
+  onImportJson,
 }) => {
   const [draftOpen, setDraftOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -70,6 +102,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
   void draftsVersion;
   const zoomPercent = Math.round((viewport.zoom / 40) * 100);
 
+  const handleImportFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => onImportJson(String(reader.result ?? ''));
+    reader.readAsText(file);
+  };
+
   return (
     <header className="toolbar" role="toolbar" aria-label="Floor editor controls">
       <div className="toolbar-brand">
@@ -77,23 +115,18 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <span>Floor Planner</span>
       </div>
 
-      <div className="toolbar-group">
-        <button
-          type="button"
-          className={`toolbar-btn toggle-btn ${tool === 'select' ? 'active' : ''}`}
-          onClick={() => onTool('select')}
-          title="Select"
-        >
-          Select
-        </button>
-        <button
-          type="button"
-          className={`toolbar-btn toggle-btn ${tool === 'pan' ? 'active' : ''}`}
-          onClick={() => onTool('pan')}
-          title="Pan"
-        >
-          Pan
-        </button>
+      <div className="toolbar-group toolbar-tools">
+        {TOOLS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`toolbar-btn toggle-btn ${tool === t.id ? 'active' : ''}`}
+            onClick={() => onTool(t.id)}
+            title={t.hint}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="toolbar-divider" />
@@ -117,7 +150,36 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           ↷
         </button>
-        <button type="button" className="toolbar-btn" onClick={onCopy} title="Copy (Ctrl+C)">
+        <button
+          type="button"
+          className="toolbar-btn icon-btn"
+          onClick={() => onRotate(-1)}
+          disabled={!hasSelection}
+          title="Rotate 90° counter-clockwise (Shift+R)"
+        >
+          ⟲
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn icon-btn"
+          onClick={() => onRotate(1)}
+          disabled={!hasSelection}
+          title="Rotate 90° clockwise (R)"
+        >
+          ⟳
+        </button>
+      </div>
+
+      <div className="toolbar-divider" />
+
+      <div className="toolbar-group">
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={onCopy}
+          disabled={!hasSelection}
+          title="Copy (Ctrl+C)"
+        >
           Copy
         </button>
         <button
@@ -125,9 +187,27 @@ const Toolbar: React.FC<ToolbarProps> = ({
           className="toolbar-btn"
           onClick={onPaste}
           disabled={!canPaste}
-          title="Paste into selected cell (Ctrl+V)"
+          title="Paste at cursor (Ctrl+V)"
         >
           Paste
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={onDuplicate}
+          disabled={!hasSelection}
+          title="Duplicate (Ctrl+D)"
+        >
+          Duplicate
+        </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={onDelete}
+          disabled={!hasSelection}
+          title="Delete (Del)"
+        >
+          Delete
         </button>
       </div>
 
@@ -146,6 +226,9 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <button type="button" className="toolbar-btn" onClick={onFitFloor} title="Fit floor">
           Fit
         </button>
+        <button type="button" className="toolbar-btn" onClick={onResetView} title="Reset camera">
+          Reset
+        </button>
       </div>
 
       <div className="toolbar-divider" />
@@ -155,6 +238,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           type="button"
           className={`toolbar-btn toggle-btn ${showGrid ? 'active' : ''}`}
           onClick={onToggleGrid}
+          title="Show grid"
         >
           Grid
         </button>
@@ -162,8 +246,17 @@ const Toolbar: React.FC<ToolbarProps> = ({
           type="button"
           className={`toolbar-btn toggle-btn ${snapEnabled ? 'active' : ''}`}
           onClick={onToggleSnap}
+          title="Snap to the visible grid level"
         >
           Snap
+        </button>
+        <button
+          type="button"
+          className={`toolbar-btn toggle-btn ${showCoordinates ? 'active' : ''}`}
+          onClick={onToggleCoordinates}
+          title="Show coordinates and axis labels"
+        >
+          Coords
         </button>
       </div>
 
@@ -250,15 +343,50 @@ const Toolbar: React.FC<ToolbarProps> = ({
           {exportOpen && (
             <div className="menu-dropdown">
               <p className="menu-empty" style={{ paddingBottom: 4 }}>
-                Exports the full floor area
+                Floor plan JSON is the contract for the viewer app
               </p>
+              <button
+                type="button"
+                className="menu-item"
+                onClick={() => {
+                  onExportJson();
+                  setExportOpen(false);
+                }}
+              >
+                Download floor plan JSON
+              </button>
+              <button
+                type="button"
+                className="menu-item"
+                onClick={() => {
+                  onCopyJson();
+                  setExportOpen(false);
+                }}
+              >
+                Copy floor plan JSON
+              </button>
+              <label className="menu-item" style={{ cursor: 'pointer' }}>
+                Import floor plan JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImportFile(file);
+                    e.target.value = '';
+                    setExportOpen(false);
+                  }}
+                />
+              </label>
+              <div className="menu-divider" />
               <label className="menu-check">
                 <input
                   type="checkbox"
                   checked={includeGridOnExport}
                   onChange={onToggleExportGrid}
                 />
-                Include grid lines
+                Include grid lines in images
               </label>
               <button
                 type="button"

@@ -1,70 +1,117 @@
 import { describe, expect, it } from 'vitest';
-import { generateFloorMatrix, matrixToJson } from './matrix';
-import type { Entity, FloorConfig } from '../types/geometry';
+import type { Entity, Floor, GridCell, Wall, WorkspaceConfig } from '../types/floorplan';
+import { WALL_CODE, generateFloorMatrix, matrixToPlainText } from './matrix';
 
-const floor6: FloorConfig = { width: 6, height: 6, a: 1 };
+const cell = (x: number, y: number): GridCell => ({ x, y });
+
+const workspace: WorkspaceConfig = {
+  id: 'w',
+  name: 'W',
+  widthCells: 4,
+  heightCells: 3,
+  unit: 'meter',
+};
+
+function floorWith(entities: Entity[] = [], walls: Wall[] = []): Floor {
+  return { id: 'f', name: 'F', entities, walls };
+}
+
+function entity(partial: Partial<Entity> = {}): Entity {
+  return {
+    id: 'e',
+    kind: 'desk',
+    code: 6,
+    origin: cell(0, 0),
+    size: { w: 1, h: 1 },
+    rotation: 0,
+    ...partial,
+  };
+}
 
 describe('generateFloorMatrix', () => {
-  it('covers the full floor with zeros when empty', () => {
-    const m = generateFloorMatrix([], floor6);
-    expect(m.rows).toBe(6);
-    expect(m.cols).toBe(6);
+  it('sizes the matrix from the workspace cell extent', () => {
+    const m = generateFloorMatrix(floorWith(), workspace, 0.25);
+    expect(m.rows).toBe(3);
+    expect(m.cols).toBe(4);
+    expect(m.cellSize).toBe(0.25);
+  });
+
+  it('puts world row 0 at the bottom of the matrix', () => {
+    const m = generateFloorMatrix(floorWith([entity()]), workspace, 0.25);
+    expect(m.matrix[2][0]).toBe(6);
+    expect(m.matrix[0][0]).toBe(0);
+  });
+
+  it('stamps every occupied cell of a rectangle', () => {
+    const m = generateFloorMatrix(
+      floorWith([entity({ size: { w: 2, h: 2 } })]),
+      workspace,
+      0.25,
+    );
+    expect(matrixToPlainText(m)).toBe('0 0 0 0\n6 6 0 0\n6 6 0 0');
+  });
+
+  it('follows an irregular footprint exactly', () => {
+    const m = generateFloorMatrix(
+      floorWith([
+        entity({ size: { w: 2, h: 2 }, cells: [cell(0, 0), cell(1, 0), cell(0, 1)] }),
+      ]),
+      workspace,
+      0.25,
+    );
+    expect(matrixToPlainText(m)).toBe('0 0 0 0\n6 0 0 0\n6 6 0 0');
+  });
+
+  it('ignores text entities and zero codes', () => {
+    const m = generateFloorMatrix(
+      floorWith([entity({ kind: 'text', code: 0 })]),
+      workspace,
+      0.25,
+    );
     expect(m.matrix.flat().every((v) => v === 0)).toBe(true);
   });
 
-  it('places a 4×4 workstation with zeros in the unused floor cells', () => {
-    const entities: Entity[] = [
-      {
-        id: 'w1',
-        kind: 'workstation',
-        code: 1,
-        x: 0,
-        y: 0,
-        width: 4,
-        height: 4,
-      },
-    ];
-    const m = generateFloorMatrix(entities, floor6);
-    expect(m.rows).toBe(6);
-    expect(m.cols).toBe(6);
-    // Row 0 is top of floor (world y=5..6) → zeros
-    expect(m.matrix[0]).toEqual([0, 0, 0, 0, 0, 0]);
-    // Bottom-left (low world Y) should be 1s - last 4 rows, first 4 cols
-    expect(m.matrix[5].slice(0, 4)).toEqual([1, 1, 1, 1]);
-    expect(m.matrix[5][4]).toBe(0);
-    expect(m.matrix[2][0]).toBe(1);
-    expect(m.matrix[1][0]).toBe(0);
+  it('clips cells that fall outside the workspace', () => {
+    const m = generateFloorMatrix(
+      floorWith([entity({ origin: cell(3, 2), size: { w: 4, h: 4 } })]),
+      workspace,
+      0.25,
+    );
+    expect(m.matrix[0][3]).toBe(6);
+    expect(m.rows).toBe(3);
+    expect(m.cols).toBe(4);
   });
 
-  it('puts workstation bottom-left and plant top-right visually', () => {
-    const floor: FloorConfig = { width: 5, height: 5, a: 1 };
-    const entities: Entity[] = [
-      { id: 'w', kind: 'workstation', code: 1, x: 0, y: 0, width: 2, height: 2 },
-      { id: 'p', kind: 'plant', code: 2, x: 3, y: 3, width: 2, height: 2 },
-    ];
-    const m = generateFloorMatrix(entities, floor);
-    // Top-right of matrix (row 0, last cols) = plant (high Y)
-    expect(m.matrix[0][3]).toBe(2);
-    expect(m.matrix[0][4]).toBe(2);
-    // Bottom-left of matrix (last row, first cols) = workstation
-    expect(m.matrix[4][0]).toBe(1);
-    expect(m.matrix[4][1]).toBe(1);
-    // Empty corner
-    expect(m.matrix[0][0]).toBe(0);
-    expect(m.matrix[4][4]).toBe(0);
+  it('stamps walls with a reserved code', () => {
+    const wall: Wall = {
+      id: 'w1',
+      points: [cell(0, 1), cell(4, 1)],
+      thickness: 1,
+      exterior: false,
+    };
+    const m = generateFloorMatrix(floorWith([], [wall]), workspace, 0.25);
+    expect(m.matrix[1].every((v) => v === WALL_CODE)).toBe(true);
   });
 
-  it('exports clean JSON with matrix field', () => {
-    const m = generateFloorMatrix([], { width: 2, height: 2, a: 1 });
-    const json = JSON.parse(matrixToJson(m));
-    expect(json).toEqual({
-      cellSize: 1,
-      rows: 2,
-      cols: 2,
-      matrix: [
-        [0, 0],
-        [0, 0],
-      ],
+  it('can omit walls', () => {
+    const wall: Wall = {
+      id: 'w1',
+      points: [cell(0, 1), cell(4, 1)],
+      thickness: 1,
+      exterior: false,
+    };
+    const m = generateFloorMatrix(floorWith([], [wall]), workspace, 0.25, {
+      includeWalls: false,
     });
+    expect(m.matrix.flat().every((v) => v === 0)).toBe(true);
+  });
+
+  it('lets later entities overwrite earlier ones', () => {
+    const m = generateFloorMatrix(
+      floorWith([entity({ id: 'a', code: 1 }), entity({ id: 'b', code: 2 })]),
+      workspace,
+      0.25,
+    );
+    expect(m.matrix[2][0]).toBe(2);
   });
 });
