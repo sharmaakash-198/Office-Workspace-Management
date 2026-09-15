@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Entity, FloorPlanDoc, Wall } from '../types/floorplan';
-import type { FloorMatrix } from '../geometry/matrix';
 import type { CollisionPair } from '../geometry/collision';
 
 interface PropertiesPanelProps {
@@ -14,10 +13,6 @@ interface PropertiesPanelProps {
   onResizeSelected: (w: number, h: number) => void;
   onMoveSelected: (x: number, y: number) => void;
   collisions: CollisionPair[];
-  matrix: FloorMatrix | null;
-  onGenerateMatrix: () => void;
-  onCopyMatrix: () => void;
-  onCopyMatrixJson: () => void;
 }
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
@@ -31,10 +26,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onResizeSelected,
   onMoveSelected,
   collisions,
-  matrix,
-  onGenerateMatrix,
-  onCopyMatrix,
-  onCopyMatrixJson,
 }) => {
   const { workspace, grid } = doc;
   const single = selected.length === 1 ? selected[0] : null;
@@ -110,16 +101,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onChange={(e) => onUpdateSelected({ label: e.target.value })}
               />
             </label>
-            {single.kind !== 'text' && (
-              <label className="prop-field">
-                <span>Matrix code</span>
-                <input
-                  type="number"
-                  value={single.code}
-                  onChange={(e) => onUpdateSelected({ code: Number(e.target.value) || 0 })}
-                />
-              </label>
-            )}
             <label className="prop-field">
               <span>Colour</span>
               <input
@@ -283,38 +264,6 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </section>
       )}
 
-      <section className="prop-section">
-        <h3>Occupancy matrix</h3>
-        <p className="panel-hint">
-          Interop dump at cell size a. Row 0 is the top of the floor, empty = 0, walls = 99.
-        </p>
-        <div className="prop-actions">
-          <button type="button" className="toolbar-btn" onClick={onGenerateMatrix}>
-            Generate
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn"
-            onClick={onCopyMatrix}
-            disabled={!matrix || matrix.rows === 0}
-          >
-            Copy matrix
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn"
-            onClick={onCopyMatrixJson}
-            disabled={!matrix || matrix.rows === 0}
-          >
-            Copy JSON
-          </button>
-        </div>
-        {matrix && matrix.rows > 0 && (
-          <pre className="matrix-preview">
-            {matrix.matrix.map((row) => row.join(' ')).join('\n')}
-          </pre>
-        )}
-      </section>
     </aside>
   );
 };

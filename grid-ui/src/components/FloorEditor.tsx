@@ -30,8 +30,6 @@ import {
 } from '../geometry/cells';
 import { findCollisions } from '../geometry/collision';
 import { constrainToAxis, findWallAt, translateWall } from '../geometry/walls';
-import { generateFloorMatrix, matrixToJson, matrixToPlainText } from '../geometry/matrix';
-import type { FloorMatrix } from '../geometry/matrix';
 import {
   useEditorStore,
   selectActiveFloor,
@@ -62,6 +60,7 @@ import PropertiesPanel from './PropertiesPanel';
 import Toolbar from './Toolbar';
 import FloorSwitcher from './FloorSwitcher';
 import HowToUseModal from './HowToUseModal';
+import EntityContextPanel from './EntityContextPanel';
 
 const ZOOM_FACTOR = 1.12;
 const MAX_ZOOM = 400;
@@ -115,6 +114,7 @@ const FloorEditor: React.FC = () => {
     showCoordinates,
     theme,
     clipboard,
+    cellClipboard,
     library,
     customLibrary,
     activeFloorId,
@@ -126,11 +126,12 @@ const FloorEditor: React.FC = () => {
 
   const [svgSize, setSvgSize] = useState({ width: 800, height: 600 });
   const [includeGridOnExport, setIncludeGridOnExport] = useState(true);
-  const [matrix, setMatrix] = useState<FloorMatrix | null>(null);
   const [howToOpen, setHowToOpen] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [marqueeRect, setMarqueeRect] = useState<Rect | null>(null);
+  /** Show the Canva-style entity actions panel when entities are selected. */
+  const [showEntityPanel, setShowEntityPanel] = useState(false);
 
   const dragRef = useRef<DragMode>(null);
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
@@ -182,6 +183,35 @@ const FloorEditor: React.FC = () => {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  // Show context panel when entities become selected; hide when deselected.
+  useEffect(() => {
+    if (selectedIds.length > 0) setShowEntityPanel(true);
+    else setShowEntityPanel(false);
+  }, [selectedIds]);
+
+  /**
+   * Screen position used to anchor the entity context panel.
+   *
+   * worldToScreen maps:  screenY = -worldY * zoom + panY
+   * → higher world Y   = smaller screen Y = visually higher on screen.
+   *
+   * So the TOPMOST screen edge of the selection is at MAX world Y.
+   * We pin the panel there; the CSS transform then lifts it fully above
+   * the selection bounding box with a small gap.
+   */
+  const entityPanelPos = useMemo(() => {
+    if (!showEntityPanel || selectedEntities.length === 0) return null;
+    let minX = Infinity, maxX = -Infinity;
+    let maxY = -Infinity; // max world Y = top of screen
+    for (const e of selectedEntities) {
+      minX = Math.min(minX, e.origin.x * a);
+      maxX = Math.max(maxX, (e.origin.x + e.size.w) * a);
+      maxY = Math.max(maxY, (e.origin.y + e.size.h) * a);
+    }
+    // Horizontal centre, topmost screen edge of the selection.
+    return worldToScreen({ x: (minX + maxX) / 2, y: maxY }, viewport);
+  }, [showEntityPanel, selectedEntities, a, viewport]);
 
   useEffect(() => {
     if (!notice) return;
@@ -478,7 +508,31 @@ const FloorEditor: React.FC = () => {
       return;
     }
 
-    if (e.ctrlKey || e.metaKey) {
+    // Middle-button or spacebar → always pan.
+    if (e.button === 1 || spaceHeld) {
+      e.preventDefault();
+      dragRef.current = {
+        type: 'pan',
+        startX: e.clientX,
+        startY: e.clientY,
+        panX: s.viewport.panX,
+        panY: s.viewport.panY,
+        worldAtStart: world,
+        shift: e.shiftKey,
+      };
+      return;
+    }
+
+    // Ctrl/Meta + drag → additive marquee (works in any tool).
+    // Select tool + left-button drag on empty space → rubber-band marquee.
+    // This lets users drag a region over already-placed elements to select them.
+    const hitEntity = hitTestEntity(world);
+    const wallUnder = findWallAt(activeFloor.walls, world, s.doc.grid.a, s.doc.grid.a * 0.5);
+    const wantMarquee =
+      e.button === 0 &&
+      (e.ctrlKey || e.metaKey || (s.tool === 'select' && !hitEntity && !wallUnder));
+
+    if (wantMarquee) {
       dragRef.current = {
         type: 'marquee',
         startWorld: world,
@@ -495,11 +549,7 @@ const FloorEditor: React.FC = () => {
       return;
     }
 
-    const wantPan =
-      e.button === 1 ||
-      s.tool === 'pan' ||
-      spaceHeld ||
-      (e.button === 0 && !hitTestEntity(world));
+    const wantPan = s.tool === 'pan' || (e.button === 0 && !hitTestEntity(world));
 
     if (wantPan) {
       e.preventDefault();
@@ -724,7 +774,12 @@ const FloorEditor: React.FC = () => {
       }
       if (meta && e.key.toLowerCase() === 'c') {
         e.preventDefault();
-        s.copySelection();
+        if (e.shiftKey && s.selectedCells.length > 0) {
+          // Ctrl+Shift+C → copy entities in selected cells
+          s.copyCellEntities(s.selectedCells);
+        } else {
+          s.copySelection();
+        }
         return;
       }
       if (meta && e.key.toLowerCase() === 'x') {
@@ -735,7 +790,14 @@ const FloorEditor: React.FC = () => {
       }
       if (meta && e.key.toLowerCase() === 'v') {
         e.preventDefault();
-        s.pasteAt(s.cursorCell ?? { x: 0, y: 0 });
+        if (e.shiftKey && s.selectedCells.length > 0 && s.cellClipboard) {
+          // Ctrl+Shift+V → paste cell entities at the selected cell bounding box origin
+          const minX = Math.min(...s.selectedCells.map((c) => c.x));
+          const minY = Math.min(...s.selectedCells.map((c) => c.y));
+          s.pasteCellEntities({ x: minX, y: minY });
+        } else {
+          s.pasteAt(s.cursorCell ?? { x: 0, y: 0 });
+        }
         return;
       }
       if (meta && e.key.toLowerCase() === 'd') {
@@ -1118,11 +1180,33 @@ const FloorEditor: React.FC = () => {
             )}
           </svg>
 
+          {/* Canva-style floating panel for entity selections */}
+          {entityPanelPos && showEntityPanel && (
+            <EntityContextPanel
+              x={entityPanelPos.x}
+              y={entityPanelPos.y}
+              count={selectedEntities.length}
+              onDuplicate={store.duplicateSelection}
+              onMultiDuplicate={(times, dir) => store.multiDuplicate(times, dir)}
+              onRotateCW={() => store.rotateSelection(1)}
+              onRotateCCW={() => store.rotateSelection(-1)}
+              onDelete={() => {
+                store.deleteSelection();
+                setShowEntityPanel(false);
+              }}
+              onClose={() => {
+                store.clearSelection();
+                setShowEntityPanel(false);
+              }}
+            />
+          )}
+
           {selectionMenuPos && (
             <SelectionActionMenu
               x={selectionMenuPos.x}
               y={selectionMenuPos.y}
               cellCount={selectedCells.length}
+              hasCellClipboard={!!cellClipboard}
               onCreateArea={() =>
                 store.createAreaFromCells(
                   selectedCells,
@@ -1153,6 +1237,17 @@ const FloorEditor: React.FC = () => {
                 });
                 store.setSelectedCells([]);
                 setNotice('Shape added to the library');
+              }}
+              onCopyCells={() => {
+                store.copyCellEntities(selectedCells);
+                setNotice('Entities in selection copied');
+              }}
+              onPasteCells={() => {
+                if (!cellClipboard) return;
+                const minX = Math.min(...selectedCells.map((c) => c.x));
+                const minY = Math.min(...selectedCells.map((c) => c.y));
+                store.pasteCellEntities({ x: minX, y: minY });
+                setNotice('Entities pasted at selected cells');
               }}
               onClear={() => store.setSelectedCells([])}
             />
@@ -1210,16 +1305,6 @@ const FloorEditor: React.FC = () => {
             if (singleSelected) store.updateEntity(singleSelected.id, { origin: { x, y } });
           }}
           collisions={collisions}
-          matrix={matrix}
-          onGenerateMatrix={() =>
-            setMatrix(generateFloorMatrix(activeFloor, doc.workspace, a))
-          }
-          onCopyMatrix={() => {
-            if (matrix) void navigator.clipboard.writeText(matrixToPlainText(matrix));
-          }}
-          onCopyMatrixJson={() => {
-            if (matrix) void navigator.clipboard.writeText(matrixToJson(matrix));
-          }}
         />
       </div>
 

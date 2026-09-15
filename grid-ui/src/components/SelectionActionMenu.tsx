@@ -4,9 +4,12 @@ interface SelectionActionMenuProps {
   x: number;
   y: number;
   cellCount: number;
+  hasCellClipboard: boolean;
   onCreateArea: () => void;
   onCreateRoom: () => void;
   onSaveAsShape: () => void;
+  onCopyCells: () => void;
+  onPasteCells: () => void;
   onClear: () => void;
 }
 
@@ -14,9 +17,12 @@ const SelectionActionMenu: React.FC<SelectionActionMenuProps> = ({
   x,
   y,
   cellCount,
+  hasCellClipboard,
   onCreateArea,
   onCreateRoom,
   onSaveAsShape,
+  onCopyCells,
+  onPasteCells,
   onClear,
 }) => (
   <div
@@ -38,6 +44,23 @@ const SelectionActionMenu: React.FC<SelectionActionMenuProps> = ({
       title="Add this footprint to the library so it can be reused"
     >
       Save as shape
+    </button>
+    <button
+      type="button"
+      className="toolbar-btn"
+      onClick={onCopyCells}
+      title="Copy entities in selected cells (Ctrl+Shift+C)"
+    >
+      Copy cells
+    </button>
+    <button
+      type="button"
+      className="toolbar-btn"
+      onClick={onPasteCells}
+      disabled={!hasCellClipboard}
+      title="Paste copied entities at the selected cell origin (Ctrl+Shift+V)"
+    >
+      Paste here
     </button>
     <button type="button" className="toolbar-btn" onClick={onClear}>
       Clear

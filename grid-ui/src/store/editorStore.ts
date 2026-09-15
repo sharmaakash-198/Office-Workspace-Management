@@ -79,6 +79,8 @@ export type EditorState = {
   showCoordinates: boolean;
   theme: Theme;
   clipboard: Clipboard;
+  /** Entities copied via "Copy cells" — keyed to the selected cell bounding box origin. */
+  cellClipboard: { entities: Entity[]; origin: GridCell } | null;
   library: LibraryItem[];
   customLibrary: LibraryItem[];
 };
@@ -134,6 +136,9 @@ export type EditorActions = {
   copySelection: () => void;
   pasteAt: (cell: GridCell) => void;
   duplicateSelection: () => void;
+  multiDuplicate: (times: number, direction: 'right' | 'down' | 'left' | 'up') => void;
+  copyCellEntities: (cells: GridCell[]) => void;
+  pasteCellEntities: (targetOrigin: GridCell) => void;
 
   setLibraryColor: (id: string, color: string) => void;
   addCustomLibraryItem: (item: LibraryItem) => void;
@@ -171,6 +176,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   showCoordinates: true,
   theme: 'light',
   clipboard: { entities: [], walls: [] },
+  cellClipboard: null,
   library: DEFAULT_ENTITY_LIBRARY.map((i) => ({ ...i })),
   customLibrary: [],
 
@@ -602,6 +608,106 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     set({
       selectedIds: entities.map((e) => e.id),
       selectedWallIds: walls.map((w) => w.id),
+    });
+  },
+
+  multiDuplicate: (times, direction) => {
+    const { doc, activeFloorId, selectedIds } = get();
+    const floor = findFloor(doc, activeFloorId);
+    if (!floor || selectedIds.length === 0 || times < 1) return;
+
+    const ids = new Set(selectedIds);
+    const source = floor.entities.filter((e) => ids.has(e.id));
+    if (source.length === 0) return;
+
+    // Compute bounding box of the selection to determine step size.
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    for (const e of source) {
+      minX = Math.min(minX, e.origin.x);
+      maxX = Math.max(maxX, e.origin.x + e.size.w);
+      minY = Math.min(minY, e.origin.y);
+      maxY = Math.max(maxY, e.origin.y + e.size.h);
+    }
+    const bboxW = maxX - minX;
+    const bboxH = maxY - minY;
+
+    // Step vector per copy (Y increases downward on the floor plan).
+    const stepX = direction === 'right' ? bboxW : direction === 'left' ? -bboxW : 0;
+    const stepY = direction === 'down'  ? bboxH : direction === 'up'   ? -bboxH : 0;
+
+    // Build all copies.
+    const allNewEntities: ReturnType<typeof cloneEntity>[] = [];
+    for (let i = 1; i <= times; i++) {
+      const dx = stepX * i;
+      const dy = stepY * i;
+      for (const e of source) {
+        allNewEntities.push(translateEntity(cloneEntity(e, createId(e.kind)), dx, dy));
+      }
+    }
+
+    get().commit((d) => {
+      const target = findFloor(d, activeFloorId);
+      if (!target) return d;
+      return setEntities(d, activeFloorId, [...target.entities, ...allNewEntities]);
+    });
+    set({
+      selectedIds: allNewEntities.map((e) => e.id),
+      selectedWallIds: [],
+    });
+  },
+
+  copyCellEntities: (cells) => {
+    const { doc, activeFloorId } = get();
+    const floor = findFloor(doc, activeFloorId);
+    if (!floor || cells.length === 0) return;
+
+    // Build a set of occupied cell keys for quick look-up.
+    const cellKeys = new Set(cells.map((c) => `${c.x},${c.y}`));
+
+    // Find all entities that have at least one cell overlapping the selection.
+    const matching = floor.entities.filter((e) =>
+      absoluteCells(e).some((c) => cellKeys.has(`${c.x},${c.y}`)),
+    );
+    if (matching.length === 0) return;
+
+    // Compute the bounding box origin of the selected cells so paste knows
+    // how to re-align entities relative to the paste target.
+    let minX = Infinity;
+    let minY = Infinity;
+    for (const c of cells) {
+      if (c.x < minX) minX = c.x;
+      if (c.y < minY) minY = c.y;
+    }
+
+    set({
+      cellClipboard: {
+        entities: matching.map((e) => cloneEntity(e, e.id)),
+        origin: { x: minX, y: minY },
+      },
+    });
+  },
+
+  pasteCellEntities: (targetOrigin) => {
+    const { cellClipboard, activeFloorId } = get();
+    if (!cellClipboard || cellClipboard.entities.length === 0) return;
+
+    const dx = targetOrigin.x - cellClipboard.origin.x;
+    const dy = targetOrigin.y - cellClipboard.origin.y;
+
+    const entities = cellClipboard.entities.map((e) =>
+      translateEntity(cloneEntity(e, createId(e.kind)), dx, dy),
+    );
+
+    get().commit((d) => {
+      const floor = findFloor(d, activeFloorId);
+      if (!floor) return d;
+      return setEntities(d, activeFloorId, [...floor.entities, ...entities]);
+    });
+    set({
+      selectedIds: entities.map((e) => e.id),
+      selectedWallIds: [],
+      selectedCells: [],
     });
   },
 
