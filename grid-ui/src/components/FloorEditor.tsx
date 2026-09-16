@@ -132,6 +132,12 @@ const FloorEditor: React.FC = () => {
   const [marqueeRect, setMarqueeRect] = useState<Rect | null>(null);
   /** Show the Canva-style entity actions panel when entities are selected. */
   const [showEntityPanel, setShowEntityPanel] = useState(false);
+  /** Pending text entity placement — shows an inline toast input instead of window.prompt(). */
+  const [pendingTextPlacement, setPendingTextPlacement] = useState<{
+    item: LibraryItem;
+    cell: GridCell;
+  } | null>(null);
+  const [pendingTextValue, setPendingTextValue] = useState('Label');
 
   const dragRef = useRef<DragMode>(null);
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
@@ -322,9 +328,9 @@ const FloorEditor: React.FC = () => {
   const placeItemAt = useCallback((item: LibraryItem, cell: GridCell) => {
     const s = storeRef.current;
     if (item.kind === 'text') {
-      const text = window.prompt('Enter label text', 'Label') ?? '';
-      if (!text.trim()) return;
-      s.placeFromLibrary(item, cell, text.trim());
+      // Show inline toast input instead of blocking window.prompt()
+      setPendingTextPlacement({ item, cell });
+      setPendingTextValue('Label');
       return;
     }
     s.placeFromLibrary(item, cell);
@@ -1295,6 +1301,68 @@ const FloorEditor: React.FC = () => {
           </div>
 
           {notice && <div className="editor-notice">{notice}</div>}
+
+          {/* ── Inline toast input for text label (replaces window.prompt) ── */}
+          {pendingTextPlacement && (
+            <div
+              className="text-label-toast-backdrop"
+              onClick={() => setPendingTextPlacement(null)}
+            >
+              <div
+                className="text-label-toast"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="text-label-toast-icon">T</span>
+                <input
+                  className="text-label-toast-input"
+                  autoFocus
+                  placeholder="Enter label text…"
+                  value={pendingTextValue}
+                  onChange={(e) => setPendingTextValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = pendingTextValue.trim();
+                      if (val && pendingTextPlacement) {
+                        storeRef.current.placeFromLibrary(
+                          pendingTextPlacement.item,
+                          pendingTextPlacement.cell,
+                          val,
+                        );
+                      }
+                      setPendingTextPlacement(null);
+                    }
+                    if (e.key === 'Escape') {
+                      setPendingTextPlacement(null);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="text-label-toast-btn confirm"
+                  onClick={() => {
+                    const val = pendingTextValue.trim();
+                    if (val && pendingTextPlacement) {
+                      storeRef.current.placeFromLibrary(
+                        pendingTextPlacement.item,
+                        pendingTextPlacement.cell,
+                        val,
+                      );
+                    }
+                    setPendingTextPlacement(null);
+                  }}
+                >
+                  Place
+                </button>
+                <button
+                  type="button"
+                  className="text-label-toast-btn cancel"
+                  onClick={() => setPendingTextPlacement(null)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <PropertiesPanel

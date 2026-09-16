@@ -40,7 +40,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <section className="prop-section">
         <h3>Workspace</h3>
         <label className="prop-field">
-          <span>Cell size a (m)</span>
+          <span>Cell size a (unit)</span>
           <input
             type="number"
             min={0.05}
@@ -50,7 +50,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           />
         </label>
         <label className="prop-field">
-          <span>Width (m)</span>
+          <span>Width (unit)</span>
           <input
             type="number"
             min={grid.a}
@@ -65,7 +65,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           />
         </label>
         <label className="prop-field">
-          <span>Height (m)</span>
+          <span>Height (unit)</span>
           <input
             type="number"
             min={grid.a}
