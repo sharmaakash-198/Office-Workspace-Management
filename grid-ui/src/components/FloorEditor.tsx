@@ -199,24 +199,41 @@ const FloorEditor: React.FC = () => {
   /**
    * Screen position used to anchor the entity context panel.
    *
-   * worldToScreen maps:  screenY = -worldY * zoom + panY
-   * → higher world Y   = smaller screen Y = visually higher on screen.
-   *
-   * So the TOPMOST screen edge of the selection is at MAX world Y.
-   * We pin the panel there; the CSS transform then lifts it fully above
-   * the selection bounding box with a small gap.
+   * worldToScreen returns coordinates relative to the SVG element, but the
+   * panel is `position: absolute` inside the container which also holds the
+   * FloorSwitcher tab bar above the SVG.  We add the SVG's offsetTop so the
+   * panel's `top` is container-relative and lines up with the actual element.
    */
   const entityPanelPos = useMemo(() => {
     if (!showEntityPanel || selectedEntities.length === 0) return null;
+    // SVG is offset within the container by the tab bar height.
+    const svgOffsetY = svgRef.current?.offsetTop ?? 0;
+
     let minX = Infinity, maxX = -Infinity;
-    let maxY = -Infinity; // max world Y = top of screen
+    let minY = Infinity;   // min world Y = bottom of screen
+    let maxY = -Infinity;  // max world Y = top of screen
     for (const e of selectedEntities) {
       minX = Math.min(minX, e.origin.x * a);
       maxX = Math.max(maxX, (e.origin.x + e.size.w) * a);
+      minY = Math.min(minY, e.origin.y * a);
       maxY = Math.max(maxY, (e.origin.y + e.size.h) * a);
     }
-    // Horizontal centre, topmost screen edge of the selection.
-    return worldToScreen({ x: (minX + maxX) / 2, y: maxY }, viewport);
+    const centreX = (minX + maxX) / 2;
+    const topSvg = worldToScreen({ x: centreX, y: maxY }, viewport);
+    const bottomSvg = worldToScreen({ x: centreX, y: minY }, viewport);
+
+    // Convert to container-relative coordinates.
+    const topY = topSvg.y + svgOffsetY;
+    const bottomY = bottomSvg.y + svgOffsetY;
+
+    // Panel is ≈200px tall + 12px gap.
+    // If placing above would overflow the container top, flip below.
+    const flipped = topY - 212 < 0;
+    return {
+      x: topSvg.x,
+      y: flipped ? bottomY : topY,
+      flipped,
+    };
   }, [showEntityPanel, selectedEntities, a, viewport]);
 
   useEffect(() => {
@@ -1203,6 +1220,7 @@ const FloorEditor: React.FC = () => {
             <EntityContextPanel
               x={entityPanelPos.x}
               y={entityPanelPos.y}
+              flipped={entityPanelPos.flipped}
               count={selectedEntities.length}
               onDuplicate={store.duplicateSelection}
               onMultiDuplicate={(times, dir) => store.multiDuplicate(times, dir)}

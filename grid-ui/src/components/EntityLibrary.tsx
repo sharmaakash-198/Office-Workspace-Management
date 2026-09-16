@@ -41,7 +41,7 @@ const EntityLibrary: React.FC<EntityLibraryProps> = ({
           <strong>{item.label}</strong>
           <small>
             {item.kind === 'text'
-              ? 'Label only · no matrix code'
+              ? 'Label only '
               : `${item.footprint.widthCells}×${item.footprint.heightCells} cells · ${(
                   item.footprint.widthCells * a
                 ).toFixed(2)}×${(item.footprint.heightCells * a).toFixed(2)} m · code ${item.code}`}

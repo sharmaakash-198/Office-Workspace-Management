@@ -5,8 +5,10 @@ export type CopyDirection = 'right' | 'down' | 'left' | 'up';
 interface EntityContextPanelProps {
   /** Screen X of the horizontal centre of the selection bounding box. */
   x: number;
-  /** Screen Y of the TOP edge of the selection bounding box — panel floats above this. */
+  /** Screen Y anchor — top edge of selection (above) or bottom edge (flipped). */
   y: number;
+  /** When true the panel renders below the selection instead of above. */
+  flipped: boolean;
   count: number;
   onDuplicate: () => void;
   onMultiDuplicate: (times: number, direction: CopyDirection) => void;
@@ -26,6 +28,7 @@ const DIR_BUTTONS: { dir: CopyDirection; label: string; title: string }[] = [
 const EntityContextPanel: React.FC<EntityContextPanelProps> = ({
   x,
   y,
+  flipped,
   count,
   onDuplicate,
   onMultiDuplicate,
@@ -38,13 +41,13 @@ const EntityContextPanel: React.FC<EntityContextPanelProps> = ({
 
   return (
     <div
-      className="entity-ctx-panel"
+      className={`entity-ctx-panel ${flipped ? 'flipped' : ''}`}
       style={{ left: x, top: y }}
       onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="ctx-panel-header">
-        <span>{count} object{count !== 1 ? 's' : ''} selected</span>
+        <span>{count} object{count !== 1 ? 's' : ''}</span>
         <button className="ctx-panel-close" onClick={onClose} title="Deselect (Esc)">
           ×
         </button>
@@ -57,7 +60,7 @@ const EntityContextPanel: React.FC<EntityContextPanelProps> = ({
           onClick={onDuplicate}
           title="Duplicate once, offset diagonally (Ctrl+D)"
         >
-          📋 Copy ×1
+          📋 ×1
         </button>
         <div className="ctx-panel-spacer" />
         <button
@@ -79,9 +82,9 @@ const EntityContextPanel: React.FC<EntityContextPanelProps> = ({
       <div className="ctx-panel-divider" />
 
       {/* Copy ×N row */}
-      <div className="ctx-panel-label">Copy N times in a direction:</div>
+      <div className="ctx-panel-label">Copy N times:</div>
       <div className="ctx-panel-row">
-        <span className="ctx-panel-label" style={{ whiteSpace: 'nowrap' }}>Copy ×</span>
+        <span className="ctx-panel-label" style={{ whiteSpace: 'nowrap' }}>×</span>
         <input
           className="ctx-panel-n-input"
           type="number"

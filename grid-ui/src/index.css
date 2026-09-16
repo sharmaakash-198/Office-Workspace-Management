@@ -776,29 +776,46 @@ body,
 .entity-ctx-panel {
   position: absolute;
   z-index: 35;
-  transform: translate(-50%, calc(-100% - 14px));
+  /* 12px gap between panel bottom and selection top edge */
+  transform: translate(-50%, calc(-100% - 12px));
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 10px 12px;
+  gap: 5px;
+  padding: 7px 9px;
   background: var(--bg-toolbar);
   border: 1px solid var(--border-hi);
-  border-radius: 12px;
-  box-shadow: 0 10px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.08);
   white-space: nowrap;
-  min-width: 240px;
+  min-width: 210px;
   user-select: none;
   pointer-events: all;
+  animation: ctx-panel-in 0.12s ease-out;
+}
+
+/* When the panel flips below the selection — same 12px gap */
+.entity-ctx-panel.flipped {
+  transform: translate(-50%, 12px);
+}
+
+@keyframes ctx-panel-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 12px)) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, calc(-100% - 12px)) scale(1); }
+}
+.entity-ctx-panel.flipped { animation-name: ctx-panel-in-flipped; }
+@keyframes ctx-panel-in-flipped {
+  from { opacity: 0; transform: translate(-50%, 12px) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, 12px) scale(1); }
 }
 
 .ctx-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--text-muted);
-  padding-bottom: 6px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
   letter-spacing: 0.03em;
 }
@@ -807,7 +824,7 @@ body,
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   color: var(--text-muted);
   padding: 0 2px;
@@ -822,13 +839,13 @@ body,
 .ctx-panel-row {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .ctx-panel-spacer { flex: 1; }
 
 .ctx-panel-label {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -843,15 +860,15 @@ body,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  padding: 5px 11px;
-  height: 30px;
+  gap: 4px;
+  padding: 3px 9px;
+  height: 26px;
   background: var(--accent-bg);
   border: 1px solid var(--toggle-active-border);
-  border-radius: 7px;
+  border-radius: 6px;
   color: var(--toggle-active-text);
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
@@ -887,23 +904,23 @@ body,
 }
 
 .ctx-panel-btn.dir {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .ctx-panel-n-input {
-  width: 46px;
-  height: 30px;
-  padding: 0 6px;
-  border-radius: 6px;
+  width: 40px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 5px;
   border: 1px solid var(--border-hi);
   background: var(--bg-app);
   color: var(--text-primary);
   font: inherit;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-align: center;
 }
