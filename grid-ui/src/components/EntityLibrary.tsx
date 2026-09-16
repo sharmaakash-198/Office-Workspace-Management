@@ -42,9 +42,9 @@ const EntityLibrary: React.FC<EntityLibraryProps> = ({
           <small>
             {item.kind === 'text'
               ? 'Label only · no matrix code'
-              : `${item.defaultSize.w}×${item.defaultSize.h} cells · ${(
-                  item.defaultSize.w * a
-                ).toFixed(2)}×${(item.defaultSize.h * a).toFixed(2)} m · code ${item.code}`}
+              : `${item.footprint.widthCells}×${item.footprint.heightCells} cells · ${(
+                  item.footprint.widthCells * a
+                ).toFixed(2)}×${(item.footprint.heightCells * a).toFixed(2)} m · code ${item.code}`}
           </small>
         </span>
       </button>

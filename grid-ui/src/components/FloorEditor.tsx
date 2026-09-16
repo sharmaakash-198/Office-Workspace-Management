@@ -688,6 +688,18 @@ const FloorEditor: React.FC = () => {
         (maxX - minX) * s.viewport.zoom < CLICK_PX &&
         (maxY - minY) * s.viewport.zoom < CLICK_PX
       ) {
+        // Treat as a single-cell click rather than a drag.
+        const cell = snapCell(worldToCell(drag.startWorld, s.doc.grid.a));
+        const key = `${cell.x},${cell.y}`;
+        const has = s.selectedCells.some((c) => `${c.x},${c.y}` === key);
+        if (!drag.additive) s.selectEntities([]);
+        s.setSelectedCells(
+          drag.additive
+            ? has
+              ? s.selectedCells.filter((c) => `${c.x},${c.y}` !== key)
+              : [...s.selectedCells, cell]
+            : [cell],
+        );
         return;
       }
       const hit = activeFloor.entities.filter((ent) => {
@@ -1230,7 +1242,8 @@ const FloorEditor: React.FC = () => {
                   kind: 'custom',
                   label: `Shape ${customLibrary.length + 1}`,
                   code: nextCustomCode(),
-                  defaultSize: footprint.size,
+                  footprint: { widthCells: footprint.size.w, heightCells: footprint.size.h, level: 0 as const },
+                  allowedRotations: [0, 90, 180, 270] as const,
                   cells: footprint.cells,
                   color,
                   fromSelection: true,
@@ -1286,7 +1299,7 @@ const FloorEditor: React.FC = () => {
 
         <PropertiesPanel
           doc={doc}
-          onWorkspaceResize={store.resizeWorkspaceCells}
+          onWorkspaceResize={store.resizeWorkspace}
           onBaseUnitChange={store.setBaseUnit}
           selected={selectedEntities}
           selectedWalls={selectedWalls}

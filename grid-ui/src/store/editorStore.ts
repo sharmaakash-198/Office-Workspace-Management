@@ -143,7 +143,7 @@ export type EditorActions = {
   setLibraryColor: (id: string, color: string) => void;
   addCustomLibraryItem: (item: LibraryItem) => void;
 
-  resizeWorkspaceCells: (width: number, height: number) => void;
+  resizeWorkspace: (length: number, breadth: number) => void;
   setBaseUnit: (a: number) => void;
 };
 
@@ -351,10 +351,10 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       code: item.code,
       // Centre the footprint on the click, then keep it on integer cells.
       origin: {
-        x: at.x - Math.floor(item.defaultSize.w / 2),
-        y: at.y - Math.floor(item.defaultSize.h / 2),
+        x: at.x - Math.floor(item.footprint.widthCells / 2),
+        y: at.y - Math.floor(item.footprint.heightCells / 2),
       },
-      size: { ...item.defaultSize },
+      size: { w: item.footprint.widthCells, h: item.footprint.heightCells },
       cells: item.cells ? item.cells.map((c) => ({ ...c })) : undefined,
       rotation: 0,
       label: label ?? item.label,
@@ -719,8 +719,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
   addCustomLibraryItem: (item) => set((s) => ({ customLibrary: [...s.customLibrary, item] })),
 
-  resizeWorkspaceCells: (width, height) =>
-    get().commit((d) => docResizeWorkspace(d, width, height)),
+  resizeWorkspace: (length, breadth) =>
+    get().commit((d) => docResizeWorkspace(d, length, breadth)),
 
   setBaseUnit: (a) => get().commit((d) => docSetBaseUnit(d, a)),
 }));

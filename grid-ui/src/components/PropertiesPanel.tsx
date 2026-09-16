@@ -4,7 +4,7 @@ import type { CollisionPair } from '../geometry/collision';
 
 interface PropertiesPanelProps {
   doc: FloorPlanDoc;
-  onWorkspaceResize: (widthCells: number, heightCells: number) => void;
+  onWorkspaceResize: (length: number, breadth: number) => void;
   onBaseUnitChange: (a: number) => void;
   selected: Entity[];
   selectedWalls: Wall[];
@@ -30,8 +30,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   const { workspace, grid } = doc;
   const single = selected.length === 1 ? selected[0] : null;
   const singleWall = selectedWalls.length === 1 ? selectedWalls[0] : null;
-  const widthMeters = workspace.widthCells * grid.a;
-  const heightMeters = workspace.heightCells * grid.a;
+  const widthMeters = workspace.length;
+  const heightMeters = workspace.breadth;
 
   return (
     <aside className="side-panel right-panel" aria-label="Properties">
@@ -58,8 +58,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             value={Number(widthMeters.toFixed(3))}
             onChange={(e) =>
               onWorkspaceResize(
-                Math.max(1, Math.round((Number(e.target.value) || 0) / grid.a)),
-                workspace.heightCells,
+                Math.max(grid.a, Number(e.target.value) || grid.a),
+                workspace.breadth,
               )
             }
           />
@@ -73,15 +73,15 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             value={Number(heightMeters.toFixed(3))}
             onChange={(e) =>
               onWorkspaceResize(
-                workspace.widthCells,
-                Math.max(1, Math.round((Number(e.target.value) || 0) / grid.a)),
+                workspace.length,
+                Math.max(grid.a, Number(e.target.value) || grid.a),
               )
             }
           />
         </label>
         <p className="panel-hint mono">
-          {workspace.widthCells} × {workspace.heightCells} cells · subdivision{' '}
-          {grid.subdivisionFactor} · {grid.levels} coarser levels
+          {Math.round(workspace.length / grid.a)} × {Math.round(workspace.breadth / grid.a)} cells · subdivision{' '}
+          {grid.subdivisionFactor} · {grid.maxLevel} coarser levels
         </p>
       </section>
 

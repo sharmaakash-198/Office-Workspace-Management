@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest';
 import type { Entity, Floor, GridCell, Wall, WorkspaceConfig } from '../types/floorplan';
 import { WALL_CODE, generateFloorMatrix, matrixToPlainText } from './matrix';
 
-const cell = (x: number, y: number): GridCell => ({ x, y });
+const cell = (x: number, y: number): GridCell => ({ level: 0, x, y });
 
 const workspace: WorkspaceConfig = {
   id: 'w',
   name: 'W',
-  widthCells: 4,
-  heightCells: 3,
+  length: 1,
+  breadth: 0.75,
   unit: 'meter',
 };
 
@@ -21,6 +21,7 @@ function entity(partial: Partial<Entity> = {}): Entity {
     id: 'e',
     kind: 'desk',
     code: 6,
+    level: 0,
     origin: cell(0, 0),
     size: { w: 1, h: 1 },
     rotation: 0,

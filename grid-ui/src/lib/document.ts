@@ -22,15 +22,16 @@ export function createId(prefix = 'e'): string {
 export const DEFAULT_GRID: GridConfig = {
   a: 0.25,
   subdivisionFactor: 4,
-  levels: 2,
+  referenceLevel: 0 as const,
+  minLevel: 0,
+  maxLevel: 2,
 };
 
 export const DEFAULT_WORKSPACE: WorkspaceConfig = {
   id: 'workspace-1',
   name: 'Office',
-  // 64 m x 64 m at a = 0.25 m.
-  widthCells: 256,
-  heightCells: 256,
+  length: 50,
+  breadth: 30,
   unit: 'meter',
 };
 
@@ -52,8 +53,8 @@ export function createEmptyDoc(): FloorPlanDoc {
  */
 export function floorConfigOf(doc: FloorPlanDoc): FloorConfig {
   return {
-    width: doc.workspace.widthCells * doc.grid.a,
-    height: doc.workspace.heightCells * doc.grid.a,
+    width: doc.workspace.length,
+    height: doc.workspace.breadth,
     a: doc.grid.a,
   };
 }
@@ -161,15 +162,15 @@ export function moveFloor(
  */
 export function resizeWorkspace(
   doc: FloorPlanDoc,
-  widthCells: number,
-  heightCells: number,
+  length: number,
+  breadth: number,
 ): FloorPlanDoc {
   return {
     ...doc,
     workspace: {
       ...doc.workspace,
-      widthCells: Math.max(1, Math.round(widthCells)),
-      heightCells: Math.max(1, Math.round(heightCells)),
+      length: Math.max(doc.grid.a, length),
+      breadth: Math.max(doc.grid.a, breadth),
     },
   };
 }

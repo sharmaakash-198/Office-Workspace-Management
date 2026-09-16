@@ -194,17 +194,20 @@ export function serializeFloorPlan(doc: FloorPlanDoc): FloorPlanJson {
       id: workspace.id,
       name: workspace.name,
       dimensions: {
-        length: round(workspace.widthCells * grid.a),
-        breadth: round(workspace.heightCells * grid.a),
+        length: round(workspace.length),
+        breadth: round(workspace.breadth),
         unit: workspace.unit,
       },
-      cells: { width: workspace.widthCells, height: workspace.heightCells },
+      cells: {
+        width: Math.round(workspace.length / grid.a),
+        height: Math.round(workspace.breadth / grid.a),
+      },
     },
     grid: {
       baseUnit: { name: 'a', value: grid.a, unit: workspace.unit },
       canonicalLevel: 0,
       subdivisionFactor: grid.subdivisionFactor,
-      coarserLevels: grid.levels,
+      coarserLevels: grid.maxLevel,
     },
     floors: floors.map((floor) => ({
       id: floor.id,
@@ -355,7 +358,6 @@ export function deserializeFloorPlan(raw: unknown): FloorPlanDoc {
   }
 
   const workspace = requireObject(root.workspace, '$.workspace');
-  const wsCells = requireObject(workspace.cells, '$.workspace.cells');
   const dimensions = requireObject(workspace.dimensions, '$.workspace.dimensions');
   const grid = requireObject(root.grid, '$.grid');
   const baseUnit = requireObject(grid.baseUnit, '$.grid.baseUnit');
@@ -382,8 +384,8 @@ export function deserializeFloorPlan(raw: unknown): FloorPlanDoc {
     workspace: {
       id: requireString(workspace.id, '$.workspace.id'),
       name: requireString(workspace.name, '$.workspace.name'),
-      widthCells: requireInt(wsCells.width, '$.workspace.cells.width'),
-      heightCells: requireInt(wsCells.height, '$.workspace.cells.height'),
+      length: requireNumber(dimensions.length, '$.workspace.dimensions.length'),
+      breadth: requireNumber(dimensions.breadth, '$.workspace.dimensions.breadth'),
       unit: requireString(dimensions.unit, '$.workspace.dimensions.unit'),
     },
     grid: {
@@ -392,7 +394,9 @@ export function deserializeFloorPlan(raw: unknown): FloorPlanDoc {
         grid.subdivisionFactor,
         '$.grid.subdivisionFactor',
       ),
-      levels: requireInt(grid.coarserLevels, '$.grid.coarserLevels'),
+      referenceLevel: 0 as const,
+      minLevel: 0,
+      maxLevel: requireInt(grid.coarserLevels, '$.grid.coarserLevels'),
     },
     floors,
   };

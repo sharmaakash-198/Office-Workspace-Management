@@ -11,6 +11,7 @@
 
 /** Integer coordinate on the canonical (finest) grid. */
 export type GridCell = {
+  level?: number;
   x: number;
   y: number;
 };
@@ -50,6 +51,8 @@ export type Entity = {
   kind: EntityKind;
   /** Value stamped into the occupancy matrix export. 0 means "not stamped". */
   code: number;
+  catalogId?: string;
+  level?: number;
   origin: GridCell;
   size: CellSize;
   /** Relative occupied cells. Undefined means the full bounding rectangle. */
@@ -85,20 +88,18 @@ export type Floor = {
 };
 
 export type GridConfig = {
-  /** World size of one canonical cell, in `unit`. This is the reference `a`. */
   a: number;
-  /** Cells per axis when stepping one level finer. Must be an integer > 1. */
+  referenceLevel: 0;
   subdivisionFactor: number;
-  /** Number of coarser levels available above the canonical level. */
-  levels: number;
+  minLevel: number;
+  maxLevel: number;
 };
 
 export type WorkspaceConfig = {
   id: string;
   name: string;
-  /** Workspace extent in canonical cells; always cell-aligned by construction. */
-  widthCells: number;
-  heightCells: number;
+  length: number;
+  breadth: number;
   unit: string;
 };
 
@@ -134,11 +135,22 @@ export type LibraryItem = {
   kind: EntityKind;
   label: string;
   code: number;
-  /** Default footprint in cells. */
-  defaultSize: CellSize;
+
+  visual?: {
+    type: 'SVG';
+    asset: string;
+  };
+
+  footprint: {
+    widthCells: number;
+    heightCells: number;
+    level: 0;
+  };
+
+  allowedRotations: Rotation[];
+
   color: string;
   fromSelection?: boolean;
-  /** Relative cells for irregular custom shapes. */
   cells?: GridCell[];
   defaultFontSize?: number;
 };

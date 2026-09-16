@@ -27,8 +27,8 @@ export function generateFloorMatrix(
   a: number,
   options: { includeWalls?: boolean } = {},
 ): FloorMatrix {
-  const cols = Math.max(0, workspace.widthCells);
-  const rows = Math.max(0, workspace.heightCells);
+  const cols = Math.max(0, Math.round(workspace.length / a));
+  const rows = Math.max(0, Math.round(workspace.breadth / a));
   const matrix = Array.from({ length: rows }, () => Array(cols).fill(0) as number[]);
 
   const stamp = (cell: GridCell, code: number) => {
