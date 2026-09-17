@@ -206,8 +206,15 @@ const FloorEditor: React.FC = () => {
    */
   const entityPanelPos = useMemo(() => {
     if (!showEntityPanel || selectedEntities.length === 0) return null;
-    // SVG is offset within the container by the tab bar height.
-    const svgOffsetY = svgRef.current?.offsetTop ?? 0;
+    // The panel is positioned inside the editor container, so compute the SVG's
+    // offset relative to that container using geometry instead of the SVG-only
+    // offsetTop property, which does not exist on SVGSVGElement in TypeScript.
+    const containerEl = containerRef.current;
+    const svgEl = svgRef.current;
+    const svgOffsetY =
+      containerEl && svgEl
+        ? svgEl.getBoundingClientRect().top - containerEl.getBoundingClientRect().top
+        : 0;
 
     let minX = Infinity, maxX = -Infinity;
     let minY = Infinity;   // min world Y = bottom of screen
