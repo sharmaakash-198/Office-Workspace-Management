@@ -1,0 +1,1706 @@
+{
+  "version": "1.5",
+  "generatedAt": "2026-09-21T09:23:13.874Z",
+  "settings": {
+    "geometryMode": "auto",
+    "threshold": 30,
+    "cellsPerLongSide": 64,
+    "coordinateSystem": "integer-square-grid-units",
+    "orthogonalOnly": true,
+    "minimalSides": true
+  },
+  "assets": [
+    {
+      "id": "2d/sectional-couch-seat",
+      "source": "2d/sectional-couch-seat.svg",
+      "label": "sectional-couch-seat",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 62
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 1.171875,
+          "minY": 1.171875,
+          "maxX": 73.828125,
+          "maxY": 19.921875,
+          "width": 72.65625,
+          "height": 18.75
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.171875,
+          "columns": 64,
+          "rows": 62
+        }
+      }
+    },
+    {
+      "id": "2d/bathroomSink",
+      "source": "2d/bathroomSink.svg",
+      "label": "bathroomSink",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 55
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 1.984375,
+          "maxX": 125.015625,
+          "maxY": 107.15625,
+          "width": 125.015625,
+          "height": 105.171875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.984375,
+          "columns": 64,
+          "rows": 55
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-small-sq",
+      "source": "2d/stairs-small-sq.svg",
+      "label": "stairs-small-sq",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 55
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 66.5,
+          "minY": 62.34375,
+          "maxX": 199.5,
+          "maxY": 220.28125,
+          "width": 133,
+          "height": 157.9375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 4.15625,
+          "columns": 64,
+          "rows": 55
+        }
+      }
+    },
+    {
+      "id": "2d/generic-object",
+      "source": "2d/generic-object.svg",
+      "label": "generic-object",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 347,
+          "maxY": 341.578125,
+          "width": 347,
+          "height": 341.578125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 5.421875,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/round-table",
+      "source": "2d/round-table.svg",
+      "label": "round-table",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 109,
+          "maxY": 109,
+          "width": 109,
+          "height": 109
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.703125,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/chair-3",
+      "source": "2d/chair-3.svg",
+      "label": "chair-3",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 41,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 1.234375,
+          "maxX": 50.609375,
+          "maxY": 79,
+          "width": 50.609375,
+          "height": 77.765625
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.234375,
+          "columns": 41,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/chair-1",
+      "source": "2d/chair-1.svg",
+      "label": "chair-1",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 54,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 9,
+          "minY": 0,
+          "maxX": 70.5,
+          "maxY": 93,
+          "width": 61.5,
+          "height": 93
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.5,
+          "columns": 54,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/shower",
+      "source": "2d/shower.svg",
+      "label": "shower",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 8.5625,
+          "minY": 10.703125,
+          "maxX": 128.4375,
+          "maxY": 126.296875,
+          "width": 119.875,
+          "height": 115.59375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.140625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/televizor",
+      "source": "2d/televizor.svg",
+      "label": "televizor",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 8
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 3.53125,
+          "maxX": 226,
+          "maxY": 21.1875,
+          "width": 226,
+          "height": 17.65625
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 3.53125,
+          "columns": 64,
+          "rows": 8
+        }
+      }
+    },
+    {
+      "id": "2d/window",
+      "source": "2d/window.svg",
+      "label": "window",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 14
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 126,
+          "maxY": 25.59375,
+          "width": 126,
+          "height": 25.59375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.96875,
+          "columns": 64,
+          "rows": 14
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-u-shaped",
+      "source": "2d/stairs-u-shaped.svg",
+      "label": "stairs-u-shaped",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 62
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 398,
+          "maxY": 373.125,
+          "width": 398,
+          "height": 373.125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 6.21875,
+          "columns": 64,
+          "rows": 62
+        }
+      }
+    },
+    {
+      "id": "2d/kitchenSink",
+      "source": "2d/kitchenSink.svg",
+      "label": "kitchenSink",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 39
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 8.109375,
+          "minY": 5.40625,
+          "maxX": 164.890625,
+          "maxY": 94.609375,
+          "width": 156.78125,
+          "height": 89.203125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.703125,
+          "columns": 64,
+          "rows": 39
+        }
+      }
+    },
+    {
+      "id": "2d/couch",
+      "source": "2d/couch.svg",
+      "label": "couch",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 26
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 302,
+          "maxY": 117.96875,
+          "width": 302,
+          "height": 117.96875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 4.71875,
+          "columns": 64,
+          "rows": 26
+        }
+      }
+    },
+    {
+      "id": "2d/lounge-chair",
+      "source": "2d/lounge-chair.svg",
+      "label": "lounge-chair",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            1
+          ],
+          [
+            50,
+            1
+          ],
+          [
+            50,
+            46
+          ],
+          [
+            58,
+            46
+          ],
+          [
+            58,
+            63
+          ],
+          [
+            0,
+            63
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 1.59375,
+          "maxX": 92.4375,
+          "maxY": 100.40625,
+          "width": 92.4375,
+          "height": 98.8125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.59375,
+          "columns": 59,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/toilet",
+      "source": "2d/toilet.svg",
+      "label": "toilet",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 39,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 8.90625,
+          "minY": 71.25,
+          "maxX": 103.90625,
+          "maxY": 190,
+          "width": 95,
+          "height": 118.75
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.96875,
+          "columns": 39,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-corner",
+      "source": "2d/stairs-corner.svg",
+      "label": "stairs-corner",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            63,
+            0
+          ],
+          [
+            63,
+            63
+          ],
+          [
+            27,
+            63
+          ],
+          [
+            27,
+            36
+          ],
+          [
+            0,
+            36
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 354.375,
+          "maxY": 354.375,
+          "width": 354.375,
+          "height": 354.375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 5.625,
+          "columns": 63,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/wardrobe-large",
+      "source": "2d/wardrobe-large.svg",
+      "label": "wardrobe-large",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 25
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 269,
+          "maxY": 92.46875,
+          "width": 269,
+          "height": 92.46875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 4.203125,
+          "columns": 64,
+          "rows": 25
+        }
+      }
+    },
+    {
+      "id": "2d/armchair",
+      "source": "2d/armchair.svg",
+      "label": "armchair",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 55
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 142,
+          "maxY": 119.8125,
+          "width": 142,
+          "height": 119.8125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.21875,
+          "columns": 64,
+          "rows": 55
+        }
+      }
+    },
+    {
+      "id": "2d/door",
+      "source": "2d/door.svg",
+      "label": "door",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            61,
+            0
+          ],
+          [
+            61,
+            53
+          ],
+          [
+            29,
+            53
+          ],
+          [
+            29,
+            64
+          ],
+          [
+            0,
+            64
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 126.76895140625,
+          "maxY": 133.00349,
+          "width": 126.76895140625,
+          "height": 133.00349
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.07817953125,
+          "columns": 61,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/bar-stool",
+      "source": "2d/bar-stool.svg",
+      "label": "bar-stool",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 56
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 9.140625,
+          "minY": 9.140625,
+          "maxX": 55.859375,
+          "maxY": 54.84375,
+          "width": 46.71875,
+          "height": 45.703125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.015625,
+          "columns": 64,
+          "rows": 56
+        }
+      }
+    },
+    {
+      "id": "2d/round-sink",
+      "source": "2d/round-sink.svg",
+      "label": "round-sink",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 2.015625,
+          "minY": 2.015625,
+          "maxX": 129,
+          "maxY": 126.984375,
+          "width": 126.984375,
+          "height": 124.96875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.015625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/countertop-corner",
+      "source": "2d/countertop-corner.svg",
+      "label": "countertop-corner",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 1.796875,
+          "maxX": 115,
+          "maxY": 115,
+          "width": 115,
+          "height": 113.203125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.796875,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/stair-cover",
+      "source": "2d/stair-cover.svg",
+      "label": "stair-cover",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 37,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 9.90625,
+          "maxX": 356.625,
+          "maxY": 624.09375,
+          "width": 356.625,
+          "height": 614.1875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 9.90625,
+          "columns": 37,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/computer-monitor",
+      "source": "2d/computer-monitor.svg",
+      "label": "computer-monitor",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 9
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 2,
+          "maxX": 128,
+          "maxY": 16,
+          "width": 128,
+          "height": 14
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2,
+          "columns": 64,
+          "rows": 9
+        }
+      }
+    },
+    {
+      "id": "2d/drawerr",
+      "source": "2d/drawerr.svg",
+      "label": "drawerr",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 45
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 76.25,
+          "maxX": 122,
+          "maxY": 81.96875,
+          "width": 122,
+          "height": 5.71875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.90625,
+          "columns": 64,
+          "rows": 45
+        }
+      }
+    },
+    {
+      "id": "2d/chair",
+      "source": "2d/chair.svg",
+      "label": "chair",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 52,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 1.390625,
+          "minY": 20.859375,
+          "maxX": 70.921875,
+          "maxY": 87.609375,
+          "width": 69.53125,
+          "height": 66.75
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.390625,
+          "columns": 52,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/drawer",
+      "source": "2d/drawer.svg",
+      "label": "drawer",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 60
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 2.140625,
+          "maxX": 137,
+          "maxY": 94.1875,
+          "width": 137,
+          "height": 92.046875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.140625,
+          "columns": 64,
+          "rows": 60
+        }
+      }
+    },
+    {
+      "id": "2d/table",
+      "source": "2d/table.svg",
+      "label": "table",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 32
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 241,
+          "maxY": 116.734375,
+          "width": 241,
+          "height": 116.734375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 3.765625,
+          "columns": 64,
+          "rows": 32
+        }
+      }
+    },
+    {
+      "id": "2d/kitchen-sink-corner",
+      "source": "2d/kitchen-sink-corner.svg",
+      "label": "kitchen-sink-corner",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            64,
+            0
+          ],
+          [
+            64,
+            22
+          ],
+          [
+            54,
+            22
+          ],
+          [
+            54,
+            33
+          ],
+          [
+            10,
+            33
+          ],
+          [
+            10,
+            22
+          ],
+          [
+            0,
+            22
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 122,
+          "maxY": 62.90625,
+          "width": 122,
+          "height": 62.90625
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.90625,
+          "columns": 64,
+          "rows": 35
+        }
+      }
+    },
+    {
+      "id": "2d/computer",
+      "source": "2d/computer.svg",
+      "label": "computer",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 33
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 8,
+          "minY": 2,
+          "maxX": 112,
+          "maxY": 32,
+          "width": 104,
+          "height": 30
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2,
+          "columns": 64,
+          "rows": 33
+        }
+      }
+    },
+    {
+      "id": "2d/fume-hood-md",
+      "source": "2d/fume-hood-md.svg",
+      "label": "fume-hood-md",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 35
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 1.53125,
+          "minY": 0,
+          "maxX": 98,
+          "maxY": 45.9375,
+          "width": 96.46875,
+          "height": 45.9375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.53125,
+          "columns": 64,
+          "rows": 35
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-md-sq",
+      "source": "2d/stairs-md-sq.svg",
+      "label": "stairs-md-sq",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 63.515625,
+          "minY": 67.75,
+          "maxX": 203.25,
+          "maxY": 262.53125,
+          "width": 139.734375,
+          "height": 194.78125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 4.234375,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/chair-2",
+      "source": "2d/chair-2.svg",
+      "label": "chair-2",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 51,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 15.703125,
+          "maxX": 52.34375,
+          "maxY": 65.953125,
+          "width": 52.34375,
+          "height": 50.25
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.046875,
+          "columns": 51,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/corner-desk",
+      "source": "2d/corner-desk.svg",
+      "label": "corner-desk",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            37,
+            0
+          ],
+          [
+            37,
+            37
+          ],
+          [
+            24,
+            37
+          ],
+          [
+            24,
+            64
+          ],
+          [
+            0,
+            64
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 128.921875,
+          "maxY": 223,
+          "width": 128.921875,
+          "height": 223
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 3.484375,
+          "columns": 41,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/noptiera",
+      "source": "2d/noptiera.svg",
+      "label": "noptiera",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 50
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 1.5,
+          "minY": 3,
+          "maxX": 94.5,
+          "maxY": 63,
+          "width": 93,
+          "height": 60
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.5,
+          "columns": 64,
+          "rows": 50
+        }
+      }
+    },
+    {
+      "id": "2d/plant",
+      "source": "2d/plant.svg",
+      "label": "plant",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 6.6875,
+          "minY": 15.046875,
+          "maxX": 95.296875,
+          "maxY": 101.984375,
+          "width": 88.609375,
+          "height": 86.9375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.671875,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/bidet",
+      "source": "2d/bidet.svg",
+      "label": "bidet",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 42,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 9.5,
+          "minY": 35.625,
+          "maxX": 87.875,
+          "maxY": 137.75,
+          "width": 78.375,
+          "height": 102.125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.375,
+          "columns": 42,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-lg-sq",
+      "source": "2d/stairs-lg-sq.svg",
+      "label": "stairs-lg-sq",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 32,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 66.875,
+          "minY": 66.875,
+          "maxX": 200.625,
+          "maxY": 526.640625,
+          "width": 133.75,
+          "height": 459.765625
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 8.359375,
+          "columns": 32,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/potted-plant-1",
+      "source": "2d/potted-plant-1.svg",
+      "label": "potted-plant-1",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 51
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 9.734375,
+          "minY": 0,
+          "maxX": 77.875,
+          "maxY": 68.140625,
+          "width": 68.140625,
+          "height": 68.140625
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.390625,
+          "columns": 64,
+          "rows": 51
+        }
+      }
+    },
+    {
+      "id": "2d/kitchenFridge",
+      "source": "2d/kitchenFridge.svg",
+      "label": "kitchenFridge",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 94.953125,
+          "maxX": 103,
+          "maxY": 101.390625,
+          "width": 103,
+          "height": 6.4375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.609375,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/dining-table-6",
+      "source": "2d/dining-table-6.svg",
+      "label": "dining-table-6",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 37,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 28.53125,
+          "minY": 46.6875,
+          "maxX": 38.90625,
+          "maxY": 153.03125,
+          "width": 10.375,
+          "height": 106.34375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.59375,
+          "columns": 37,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/bar-counter",
+      "source": "2d/bar-counter.svg",
+      "label": "bar-counter",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 17
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 90,
+          "minY": 3.75,
+          "maxX": 105,
+          "maxY": 7.5,
+          "width": 15,
+          "height": 3.75
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 3.75,
+          "columns": 64,
+          "rows": 17
+        }
+      }
+    },
+    {
+      "id": "2d/corner-sink",
+      "source": "2d/corner-sink.svg",
+      "label": "corner-sink",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 1.390625,
+          "minY": 1.390625,
+          "maxX": 87.609375,
+          "maxY": 87.609375,
+          "width": 86.21875,
+          "height": 86.21875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.390625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/loveseat",
+      "source": "2d/loveseat.svg",
+      "label": "loveseat",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 35
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 222,
+          "maxY": 117.9375,
+          "width": 222,
+          "height": 117.9375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 3.46875,
+          "columns": 64,
+          "rows": 35
+        }
+      }
+    },
+    {
+      "id": "2d/dining-table-square",
+      "source": "2d/dining-table-square.svg",
+      "label": "dining-table-square",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 18.1875,
+          "minY": 37.890625,
+          "maxX": 28.796875,
+          "maxY": 68.203125,
+          "width": 10.609375,
+          "height": 30.3125
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.515625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/large-plant",
+      "source": "2d/large-plant.svg",
+      "label": "large-plant",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 60,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 37.1875,
+          "minY": 31.875,
+          "maxX": 106.25,
+          "maxY": 148.75,
+          "width": 69.0625,
+          "height": 116.875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.65625,
+          "columns": 60,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/double-sink",
+      "source": "2d/double-sink.svg",
+      "label": "double-sink",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 32
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 6.890625,
+          "minY": 6.890625,
+          "maxX": 73.5,
+          "maxY": 64.3125,
+          "width": 66.609375,
+          "height": 57.421875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 2.296875,
+          "columns": 64,
+          "rows": 32
+        }
+      }
+    },
+    {
+      "id": "2d/potted-plant-2",
+      "source": "2d/potted-plant-2.svg",
+      "label": "potted-plant-2",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 5.1875,
+          "minY": 10.375,
+          "maxX": 73.921875,
+          "maxY": 79.109375,
+          "width": 68.734375,
+          "height": 68.734375
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.296875,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/stairs-round",
+      "source": "2d/stairs-round.svg",
+      "label": "stairs-round",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            64,
+            0
+          ],
+          [
+            64,
+            64
+          ],
+          [
+            16,
+            64
+          ],
+          [
+            16,
+            48
+          ],
+          [
+            0,
+            48
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 371,
+          "maxY": 371,
+          "width": 371,
+          "height": 371
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 5.796875,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/sectional-couch-corner-seat",
+      "source": "2d/sectional-couch-corner-seat.svg",
+      "label": "sectional-couch-corner-seat",
+      "geometry": {
+        "type": "orthogonal-polygon",
+        "points": [
+          [
+            0,
+            1
+          ],
+          [
+            19,
+            1
+          ],
+          [
+            19,
+            46
+          ],
+          [
+            63,
+            46
+          ],
+          [
+            63,
+            63
+          ],
+          [
+            0,
+            63
+          ]
+        ]
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_ORTHOGONAL",
+        "bounds": {
+          "minX": 0,
+          "minY": 1.140625,
+          "maxX": 71.859375,
+          "maxY": 71.859375,
+          "width": 71.859375,
+          "height": 70.71875
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.140625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    },
+    {
+      "id": "2d/table2",
+      "source": "2d/table2.svg",
+      "label": "table2",
+      "geometry": {
+        "type": "rectangle",
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "metadata": {
+        "automatic": true,
+        "status": "AUTO_BOUNDS",
+        "bounds": {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 104,
+          "maxY": 104,
+          "width": 104,
+          "height": 104
+        },
+        "unitGrid": {
+          "cellsPerLongSide": 64,
+          "cellSizePx": 1.625,
+          "columns": 64,
+          "rows": 64
+        }
+      }
+    }
+  ]
+}

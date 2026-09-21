@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 9" width="64" height="9" data-source="2d/computer-monitor.svg" data-label="computer-monitor" data-status="AUTO_BOUNDS">
+  <title>computer-monitor</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <rect x="0" y="0" width="64" height="9" class="annotation"/>
+</svg>

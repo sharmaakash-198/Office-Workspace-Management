@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 64" width="37" height="64" data-source="2d/stair-cover.svg" data-label="stair-cover" data-status="AUTO_BOUNDS">
+  <title>stair-cover</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <rect x="0" y="0" width="37" height="64" class="annotation"/>
+</svg>

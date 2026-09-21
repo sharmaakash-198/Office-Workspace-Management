@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2 64" width="2" height="64" data-source="vertical-wall.svg" data-label="vertical-wall" data-status="AUTO_BOUNDS">
+  <title>vertical-wall</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <rect x="0" y="0" width="2" height="64" class="annotation"/>
+</svg>

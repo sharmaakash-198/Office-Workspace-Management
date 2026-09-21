@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" data-source="2d/sectional-couch-corner-seat.svg" data-label="sectional-couch-corner-seat" data-status="AUTO_ORTHOGONAL">
+  <title>sectional-couch-corner-seat</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <polygon points="0,1 19,1 19,46 63,46 63,63 0,63" class="annotation"/>
+</svg>

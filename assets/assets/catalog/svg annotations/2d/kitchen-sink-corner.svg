@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 35" width="64" height="35" data-source="2d/kitchen-sink-corner.svg" data-label="kitchen-sink-corner" data-status="AUTO_ORTHOGONAL">
+  <title>kitchen-sink-corner</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <polygon points="0,0 64,0 64,22 54,22 54,33 10,33 10,22 0,22" class="annotation"/>
+</svg>

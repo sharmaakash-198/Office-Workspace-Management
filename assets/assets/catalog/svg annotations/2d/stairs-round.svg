@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" data-source="2d/stairs-round.svg" data-label="stairs-round" data-status="AUTO_ORTHOGONAL">
+  <title>stairs-round</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <polygon points="0,0 64,0 64,64 16,64 16,48 0,48" class="annotation"/>
+</svg>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 61 64" width="61" height="64" data-source="2d/door.svg" data-label="door" data-status="AUTO_ORTHOGONAL">
+  <title>door</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <polygon points="0,0 61,0 61,53 29,53 29,64 0,64" class="annotation"/>
+</svg>

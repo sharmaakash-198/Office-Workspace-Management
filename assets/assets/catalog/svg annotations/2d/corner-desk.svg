@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 64" width="41" height="64" data-source="2d/corner-desk.svg" data-label="corner-desk" data-status="AUTO_ORTHOGONAL">
+  <title>corner-desk</title>
+  <style>.annotation{fill:rgba(220,38,38,.25);stroke:#dc2626;stroke-width:0.4;stroke-linejoin:miter}</style>
+  <polygon points="0,0 37,0 37,37 24,37 24,64 0,64" class="annotation"/>
+</svg>
