@@ -1,115 +1,69 @@
-import type { CellRef, Point, Rect } from '../types/geometry';
-import { cellToWorldRect } from './grid';
-
-/** Axis-aligned rect relative to an entity origin (world meters). */
-export type FootprintRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+import type { CellRef, GridCell, Point, Rect } from '../types/geometry';
+import { cellToWorldRect, getLevelCellSize } from './grid';
+import type { SubdivisionMode } from '../types/geometry';
 
 /**
- * Build relative footprint rects for a cell selection so the marked polygon
- * keeps the exact selected shape (L, T, disconnected, etc.).
+ * Build relative finest-grid cells from a selection at any grid level.
+ * Each selected cell is expanded into finest cells of size `a`.
  */
-export function cellsToFootprint(
+export function cellsToRelativeFinest(
   cells: CellRef[],
   baseUnit: number,
-): { origin: Point; width: number; height: number; footprint: FootprintRect[] } | null {
+  a: number,
+  subdivision: SubdivisionMode,
+): { origin: GridCell; widthCells: number; heightCells: number; cells: GridCell[] } | null {
   if (cells.length === 0) return null;
 
-  const worldRects = cells.map((c) => cellToWorldRect(c, baseUnit));
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  for (const r of worldRects) {
-    minX = Math.min(minX, r.x);
-    minY = Math.min(minY, r.y);
-    maxX = Math.max(maxX, r.x + r.width);
-    maxY = Math.max(maxY, r.y + r.height);
+  const finest: GridCell[] = [];
+  const seen = new Set<string>();
+
+  for (const c of cells) {
+    const world = cellToWorldRect(c, baseUnit, subdivision);
+    const col0 = Math.round(world.x / a);
+    const row0 = Math.round(world.y / a);
+    const w = Math.max(1, Math.round(world.width / a));
+    const h = Math.max(1, Math.round(world.height / a));
+    for (let r = 0; r < h; r++) {
+      for (let col = 0; col < w; col++) {
+        const key = `${col0 + col},${row0 + r}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        finest.push({ col: col0 + col, row: row0 + r });
+      }
+    }
   }
 
-  const footprint: FootprintRect[] = worldRects.map((r) => ({
-    x: r.x - minX,
-    y: r.y - minY,
-    width: r.width,
-    height: r.height,
+  if (finest.length === 0) return null;
+
+  let minCol = Infinity;
+  let minRow = Infinity;
+  let maxCol = -Infinity;
+  let maxRow = -Infinity;
+  for (const c of finest) {
+    minCol = Math.min(minCol, c.col);
+    minRow = Math.min(minRow, c.row);
+    maxCol = Math.max(maxCol, c.col);
+    maxRow = Math.max(maxRow, c.row);
+  }
+
+  const relative = finest.map((c) => ({
+    col: c.col - minCol,
+    row: c.row - minRow,
   }));
 
   return {
-    origin: { x: minX, y: minY },
-    width: maxX - minX,
-    height: maxY - minY,
-    footprint,
+    origin: { col: minCol, row: minRow },
+    widthCells: maxCol - minCol + 1,
+    heightCells: maxRow - minRow + 1,
+    cells: relative,
   };
 }
 
-/** Absolute world rects for a footprint entity. */
-export function footprintWorldRects(
-  originX: number,
-  originY: number,
-  footprint: FootprintRect[],
-): Rect[] {
-  return footprint.map((f) => ({
-    x: originX + f.x,
-    y: originY + f.y,
-    width: f.width,
-    height: f.height,
-  }));
-}
-
-/** Outer outline of footprint (for SVG polygon preview when connected). */
-export function footprintToOutline(
-  originX: number,
-  originY: number,
-  footprint: FootprintRect[],
-): Point[] {
-  // Prefer exact union outline from grid-aligned footprint cells when possible.
-  if (footprint.length === 0) return [];
-
-  const cellSize = footprint[0].width;
-  const uniform = footprint.every(
-    (f) => Math.abs(f.width - cellSize) < 1e-9 && Math.abs(f.height - cellSize) < 1e-9,
-  );
-
-  if (!uniform) {
-    // Fallback: AABB
-    let maxX = 0;
-    let maxY = 0;
-    for (const f of footprint) {
-      maxX = Math.max(maxX, f.x + f.width);
-      maxY = Math.max(maxY, f.y + f.height);
-    }
-    return [
-      { x: originX, y: originY },
-      { x: originX + maxX, y: originY },
-      { x: originX + maxX, y: originY + maxY },
-      { x: originX, y: originY + maxY },
-    ];
-  }
-
-  const colsRows = footprint.map((f) => ({
-    col: Math.round(f.x / cellSize),
-    row: Math.round(f.y / cellSize),
-  }));
-  const outline = outlineGridCells(colsRows, cellSize);
-  return outline.map((p) => ({ x: originX + p.x, y: originY + p.y }));
-}
-
-/**
- * Trace the outer boundary of a set of unit grid cells (polyomino).
- * Returns vertices in local coordinates (cellSize units).
- */
-export function outlineGridCells(
-  cells: Array<{ col: number; row: number }>,
-  cellSize: number,
-): Point[] {
+/** Trace outer boundary; returns vertices in cell-unit local coords (1 = one finest cell). */
+export function outlineGridCells(cells: GridCell[]): Point[] {
   if (cells.length === 0) return [];
 
   const set = new Set(cells.map((c) => `${c.col},${c.row}`));
-  // Undirected boundary edges between grid corners
   type V = { x: number; y: number };
   const edgeCount = new Map<string, { a: V; b: V }>();
 
@@ -129,15 +83,14 @@ export function outlineGridCells(
     const br = { x: col + 1, y: row };
     const tr = { x: col + 1, y: row + 1 };
     const tl = { x: col, y: row + 1 };
-    if (!set.has(`${col},${row - 1}`)) addEdge(bl, br); // bottom
-    if (!set.has(`${col + 1},${row}`)) addEdge(br, tr); // right
-    if (!set.has(`${col},${row + 1}`)) addEdge(tr, tl); // top
-    if (!set.has(`${col - 1},${row}`)) addEdge(tl, bl); // left
+    if (!set.has(`${col},${row - 1}`)) addEdge(bl, br);
+    if (!set.has(`${col + 1},${row}`)) addEdge(br, tr);
+    if (!set.has(`${col},${row + 1}`)) addEdge(tr, tl);
+    if (!set.has(`${col - 1},${row}`)) addEdge(tl, bl);
   }
 
   if (edgeCount.size === 0) return [];
 
-  // Adjacency for walking
   const adj = new Map<string, V[]>();
   const vk = (v: V) => `${v.x},${v.y}`;
   for (const { a, b } of edgeCount.values()) {
@@ -147,18 +100,11 @@ export function outlineGridCells(
     adj.get(vk(b))!.push(a);
   }
 
-  // Start at bottom-left-most vertex
   let start: V | null = null;
   for (const key of adj.keys()) {
     const [x, y] = key.split(',').map(Number);
     const v = { x, y };
-    if (
-      !start ||
-      v.y < start.y ||
-      (v.y === start.y && v.x < start.x)
-    ) {
-      start = v;
-    }
+    if (!start || v.y < start.y || (v.y === start.y && v.x < start.x)) start = v;
   }
   if (!start) return [];
 
@@ -177,7 +123,6 @@ export function outlineGridCells(
       next = n;
       break;
     }
-    // If skipped prev and nothing else, allow prev as last resort only when alone
     if (!next) {
       for (const n of neighbors) {
         const ek = undirectedKey(curr, n);
@@ -195,15 +140,140 @@ export function outlineGridCells(
     curr = next;
   }
 
-  return ring.map((v) => ({ x: v.x * cellSize, y: v.y * cellSize }));
+  return ring.map((v) => ({ x: v.x, y: v.y }));
 }
 
-/** Point inside any footprint rect (world space). */
+/** SVG path `d` in cell-unit local coords (for pretty-ui boundary). */
+export function cellsToSvgPath(cells: GridCell[]): string {
+  const outline = outlineGridCells(cells);
+  if (outline.length < 2) {
+    if (cells.length === 1) {
+      const { col, row } = cells[0];
+      return `M${col},${row} L${col + 1},${row} L${col + 1},${row + 1} L${col},${row + 1} Z`;
+    }
+    return '';
+  }
+  const [first, ...rest] = outline;
+  let d = `M${first.x},${first.y}`;
+  for (const p of rest) d += ` L${p.x},${p.y}`;
+  d += ' Z';
+  return d;
+}
+
+export function cellsToWorldOutline(
+  origin: GridCell,
+  cells: GridCell[],
+  a: number,
+): Point[] {
+  return outlineGridCells(cells).map((p) => ({
+    x: (origin.col + p.x) * a,
+    y: (origin.row + p.y) * a,
+  }));
+}
+
+export function absoluteCells(origin: GridCell, cells: GridCell[]): GridCell[] {
+  return cells.map((c) => ({
+    col: origin.col + c.col,
+    row: origin.row + c.row,
+  }));
+}
+
+export function pointInRelativeCells(
+  point: Point,
+  origin: GridCell,
+  cells: GridCell[],
+  a: number,
+): boolean {
+  const col = Math.floor(point.x / a) - origin.col;
+  const row = Math.floor(point.y / a) - origin.row;
+  return cells.some((c) => c.col === col && c.row === row);
+}
+
+/** World AABB rects for relative cells. */
+export function relativeCellsWorldRects(
+  origin: GridCell,
+  cells: GridCell[],
+  a: number,
+): Rect[] {
+  return cells.map((c) => ({
+    x: (origin.col + c.col) * a,
+    y: (origin.row + c.row) * a,
+    width: a,
+    height: a,
+  }));
+}
+
+/** @deprecated legacy helper kept for tests migration */
+export function cellsToFootprint(
+  cells: CellRef[],
+  baseUnit: number,
+  subdivision: SubdivisionMode = 4,
+): { origin: Point; width: number; height: number; footprint: Rect[] } | null {
+  if (cells.length === 0) return null;
+  const worldRects = cells.map((c) => cellToWorldRect(c, baseUnit, subdivision));
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const r of worldRects) {
+    minX = Math.min(minX, r.x);
+    minY = Math.min(minY, r.y);
+    maxX = Math.max(maxX, r.x + r.width);
+    maxY = Math.max(maxY, r.y + r.height);
+  }
+  return {
+    origin: { x: minX, y: minY },
+    width: maxX - minX,
+    height: maxY - minY,
+    footprint: worldRects.map((r) => ({
+      x: r.x - minX,
+      y: r.y - minY,
+      width: r.width,
+      height: r.height,
+    })),
+  };
+}
+
+export function footprintToOutline(
+  originX: number,
+  originY: number,
+  footprint: Rect[],
+): Point[] {
+  if (footprint.length === 0) return [];
+  const cellSize = footprint[0].width;
+  const uniform = footprint.every(
+    (f) => Math.abs(f.width - cellSize) < 1e-9 && Math.abs(f.height - cellSize) < 1e-9,
+  );
+  if (!uniform) {
+    let maxX = 0;
+    let maxY = 0;
+    for (const f of footprint) {
+      maxX = Math.max(maxX, f.x + f.width);
+      maxY = Math.max(maxY, f.y + f.height);
+    }
+    return [
+      { x: originX, y: originY },
+      { x: originX + maxX, y: originY },
+      { x: originX + maxX, y: originY + maxY },
+      { x: originX, y: originY + maxY },
+    ];
+  }
+  const colsRows = footprint.map((f) => ({
+    col: Math.round(f.x / cellSize),
+    row: Math.round(f.y / cellSize),
+  }));
+  return outlineGridCells(colsRows).map((p) => ({
+    x: originX + p.x * cellSize,
+    y: originY + p.y * cellSize,
+  }));
+}
+
+/** Point inside any footprint rect (world space) — legacy helper. */
 export function pointInFootprint(
   point: Point,
   originX: number,
   originY: number,
-  footprint: FootprintRect[],
+  footprint: Rect[],
 ): boolean {
   for (const f of footprint) {
     const x = originX + f.x;
@@ -219,3 +289,5 @@ export function pointInFootprint(
   }
   return false;
 }
+
+void getLevelCellSize;

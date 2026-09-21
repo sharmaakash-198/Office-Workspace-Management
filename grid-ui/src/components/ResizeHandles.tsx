@@ -14,6 +14,7 @@ export type ResizeHandle =
 
 interface ResizeHandlesProps {
   entity: Entity;
+  a: number;
   zoom: number;
   onHandleDown: (handle: ResizeHandle, e: React.MouseEvent) => void;
 }
@@ -58,8 +59,8 @@ const CURSOR: Record<ResizeHandle, string> = {
   w: 'ew-resize',
 };
 
-const ResizeHandles: React.FC<ResizeHandlesProps> = ({ entity, zoom, onHandleDown }) => {
-  const b = entityBounds(entity);
+const ResizeHandles: React.FC<ResizeHandlesProps> = ({ entity, a, zoom, onHandleDown }) => {
+  const b = entityBounds(entity, a);
   const size = 8 / zoom;
 
   return (

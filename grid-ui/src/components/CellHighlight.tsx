@@ -1,17 +1,19 @@
 import React from 'react';
-import type { CellRef } from '../types/geometry';
+import type { CellRef, SubdivisionMode } from '../types/geometry';
 import { cellToWorldRect } from '../geometry/grid';
 
 interface CellHighlightProps {
   hoveredCell: CellRef | null;
   selectedCells: CellRef[];
   baseUnit: number;
+  subdivision: SubdivisionMode;
 }
 
 const CellHighlight: React.FC<CellHighlightProps> = ({
   hoveredCell,
   selectedCells,
   baseUnit,
+  subdivision,
 }) => {
   const selectedKeys = new Set(
     selectedCells.map((c) => `${c.level}:${c.col}:${c.row}`),
@@ -20,9 +22,11 @@ const CellHighlight: React.FC<CellHighlightProps> = ({
   return (
     <g id="cell-highlight" pointerEvents="none">
       {hoveredCell &&
+        hoveredCell.col >= 0 &&
+        hoveredCell.row >= 0 &&
         !selectedKeys.has(`${hoveredCell.level}:${hoveredCell.col}:${hoveredCell.row}`) &&
         (() => {
-          const r = cellToWorldRect(hoveredCell, baseUnit);
+          const r = cellToWorldRect(hoveredCell, baseUnit, subdivision);
           return (
             <rect
               x={r.x}
@@ -37,7 +41,7 @@ const CellHighlight: React.FC<CellHighlightProps> = ({
         })()}
 
       {selectedCells.map((cell) => {
-        const r = cellToWorldRect(cell, baseUnit);
+        const r = cellToWorldRect(cell, baseUnit, subdivision);
         return (
           <rect
             key={`${cell.level}:${cell.col}:${cell.row}`}

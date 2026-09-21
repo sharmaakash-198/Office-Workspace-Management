@@ -10,56 +10,81 @@ export type Rect = {
   height: number;
 };
 
+/** Working floor in finest-cell counts; world size = cols*a × rows*a. */
 export type FloorConfig = {
-  width: number;
-  height: number;
+  cols: number;
+  rows: number;
   a: number;
 };
 
-export type FloorObjectType = 'RECTANGLE';
+export type SubdivisionMode = 2 | 4;
 
-export type FloorObject = {
-  id: string;
-  type: FloorObjectType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export type GridCell = {
+  col: number;
+  row: number;
 };
 
-export type EntityKind =
-  | 'workstation'
-  | 'plant'
-  | 'meeting_room'
-  | 'cafeteria'
-  | 'custom'
-  | 'polygon'
-  | 'text';
+export type CatalogType = {
+  elementType: string;
+  label: string;
+  svg?: string;
+  widthCells: number;
+  heightCells: number;
+  color: string;
+};
 
-export type FootprintRect = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export type CatalogCategory = {
+  category: string;
+  label: string;
+  types: CatalogType[];
+};
+
+export type LibraryItem = {
+  id: string;
+  category: string;
+  elementType: string;
+  label: string;
+  widthCells: number;
+  heightCells: number;
+  color: string;
+  svg?: string;
+  /** Relative finest cells for custom polygons. */
+  cells?: GridCell[];
+  svgPath?: string;
+  fromSelection?: boolean;
+  defaultFontSize?: number;
+};
+
+export type CustomLibraryEntry = LibraryItem & {
+  category: string;
 };
 
 export type Entity = {
-  id: string;
-  kind: EntityKind;
-  /** Integer code stamped into the occupancy matrix (0 for text). */
-  code: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation?: number;
-  points?: Point[];
-  /** Exact cell rectangles relative to (x,y) - preserves irregular polygon shapes. */
-  footprint?: FootprintRect[];
-  label?: string;
+  objectId: string;
+  category: string;
+  elementType: string;
+  origin: GridCell;
+  widthCells: number;
+  heightCells: number;
+  /** 0 = finest placement; each +1 multiplies size by subdivision. */
+  scaleLevel: number;
+  /** Anticlockwise only: 0 | 90 | 180 | 270. */
+  rotation?: 0 | 90 | 180 | 270;
   color?: string;
-  /** Label font scale for shapes (1 = default). Absolute meters for text entities. */
+  label?: string;
+  svg?: string;
+  /** Relative finest cells for custom polygons. */
+  cells?: GridCell[];
+  /** Boundary path in cell-unit coords (pretty-ui). */
+  svgPath?: string;
   fontSize?: number;
+};
+
+export type FloorZone = {
+  id: string;
+  label: string;
+  cells: GridCell[];
+  color: string;
 };
 
 export type CellRef = {
@@ -70,16 +95,10 @@ export type CellRef = {
 
 export type EditorTool = 'select' | 'pan' | 'place';
 
-export type LibraryItem = {
-  id: string;
-  kind: Exclude<EntityKind, 'polygon'>;
-  label: string;
-  code: number;
-  defaultWidth: number;
-  defaultHeight: number;
-  color: string;
-  fromSelection?: boolean;
-  /** Relative footprint for custom shapes created from cell selection. */
-  footprint?: FootprintRect[];
-  defaultFontSize?: number;
-};
+export function floorWorldWidth(floor: FloorConfig): number {
+  return floor.cols * floor.a;
+}
+
+export function floorWorldHeight(floor: FloorConfig): number {
+  return floor.rows * floor.a;
+}

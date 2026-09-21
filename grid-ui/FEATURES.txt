@@ -1,0 +1,41 @@
+Floor Planner- features and capabilities
+=======================================
+
+Canvas & navigation
+- First-quadrant paper only: cannot pan into negative X/Y.
+- Origin (0,0) pinned to bottom-left on Fit / initial view.
+- Infinite grid continues up and right beyond the designated floor.
+- Area outside the configured floor is grayed (visible, not placeable).
+- Wheel zoom, pinch zoom, pan, snap, grid toggle.
+- Zoom split modes: 2x or 4x cell subdivision.
+
+Library & catalog
+- Category accordion library (one open at a time).
+- Types loaded from public/library-catalog.json with SVG previews.
+- Click type, then click canvas to place at finest cell size.
+- Custom polygons saved under Custom or a user-named category.
+- Delete custom library entries without removing placed objects.
+
+Placement & editing
+- Planner shows cell occupancy only (no furniture SVG on the grid).
+- Entity menu: Copy, Scale up, Scale down, Rotate 90° CCW (0/90/180/270), Delete.
+- Toolbar Delete removes the current selection.
+- Catalog items: discrete scale; polygons: free resize handles.
+- Drag to move; arrow keys nudge (Shift = ×4).
+
+Irregular floors & zones
+- Mark unusable cells to carve non-rectangular floors.
+- Clear unusable for a selection or all.
+- Mark as polygon → footprint + svgPath boundary for pretty-ui.
+- Mark zone with label and light tint; copy zone entities for paste.
+
+Data & pretty view
+- FloorDocument v2 JSON: category, elementType, objectId, rotation, unusableCells, zones.
+- Download / copy / load JSON; drafts in localStorage.
+- Pretty view renders catalog SVGs (with rotation) and polygon boundaries.
+- Returning from pretty view keeps the planner layout (editor stays mounted).
+- In-app prompts/toasts instead of browser alert/prompt dialogs.
+
+Export
+- PNG, SVG, PDF of the floor area (optional grid lines).
+- Light / dark theme.

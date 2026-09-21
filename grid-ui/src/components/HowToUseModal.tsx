@@ -26,95 +26,67 @@ const HowToUseModal: React.FC<HowToUseModalProps> = ({ open, onClose }) => {
 
         <div className="modal-body">
           <section>
-            <h3>Canvas navigation</h3>
+            <h3>First-quadrant paper</h3>
             <ul>
               <li>
-                <strong>Pan</strong> - drag empty canvas with left mouse (or hold Space / use Pan
-                tool).
+                Origin <strong>(0, 0)</strong> sits at the bottom-left. You can pan up and right
+                freely; you cannot go left or down past the axes.
               </li>
               <li>
-                <strong>Zoom</strong> - scroll wheel or pinch; zooms toward the pointer.
+                The <strong>designated floor</strong> (cols × rows) is where you place objects. Beyond
+                it the paper is <strong>grayed</strong> — visible grid, not placeable.
               </li>
               <li>
-                <strong>Fit</strong> - zooms out so the whole working floor fills the screen.
+                <strong>Fit</strong> pins the origin to the bottom-left of the screen.
               </li>
             </ul>
           </section>
 
           <section>
-            <h3>Selecting cells &amp; making a polygon</h3>
+            <h3>Library &amp; placement</h3>
             <ul>
               <li>
-                <strong>Click</strong> a cell to select it.
+                Open one category accordion, pick a type (SVG preview), click the canvas. The planner
+                shows occupied cells only; Pretty view draws the SVGs.
               </li>
               <li>
-                <strong>Shift+click</strong> to add/remove cells from the selection.
+                After place/select: <strong>Copy</strong>, <strong>Scale up/down</strong>,{' '}
+                <strong>Rotate</strong> (90° anticlockwise: 0/90/180/270), <strong>Delete</strong>.
               </li>
               <li>
-                <strong>Ctrl+drag</strong> (⌘+drag on Mac) draws a marquee over cells or entities.
-              </li>
-              <li>
-                When cells are selected, use <strong>Mark as polygon</strong> in the floating menu.
-                The exact selected shape (L, T, etc.) is kept as one draggable block and added under{' '}
-                <em>Custom shapes</em>.
-              </li>
-              <li>
-                <strong>Copy / Paste</strong> - select a shape, Copy (or Ctrl+C), select a target
-                cell, then Paste (Ctrl+V) to place another copy there.
+                Toolbar <strong>Delete</strong> removes the current selection (same as Del key).
               </li>
             </ul>
           </section>
 
           <section>
-            <h3>Shapes</h3>
+            <h3>Irregular floors, polygons &amp; zones</h3>
             <ul>
               <li>
-                Pick a library item, then click the canvas to place it.
-              </li>
-              <li>Drag a shape to move it; use green handles to resize.</li>
-              <li>Change library colours with the colour picker on each item.</li>
-              <li>Delete - select shape(s) and press Delete / Backspace.</li>
-            </ul>
-          </section>
-
-          <section>
-            <h3>Top bar</h3>
-            <ul>
-              <li>
-                <strong>Select / Pan</strong> - default tool mode.
+                Select cells (click / Shift+click / Ctrl+drag). Floating menu:{' '}
+                <strong>Mark unusable</strong> (carve the floor), <strong>Clear unusable</strong>,{' '}
+                <strong>Mark as polygon</strong>, Paste, Copy zone, Mark zone.
               </li>
               <li>
-                <strong>Undo / Redo</strong> - up to 5 steps (Ctrl+Z / Ctrl+Shift+Z).
-              </li>
-              <li>
-                <strong>Grid</strong> - toggle grid lines.
-              </li>
-              <li>
-                <strong>Snap</strong> - snap placement and moves to the current grid level.
-              </li>
-              <li>
-                <strong>Drafts</strong> - save/load layout JSON in this browser.
-              </li>
-              <li>
-                <strong>Export</strong> - PNG, SVG, or PDF (optional grid lines).
-              </li>
-              <li>
-                <strong>Light / Dark</strong> - theme toggle.
+                Polygons can be saved under Custom or a new category, and deleted from the library
+                without removing placed copies.
               </li>
             </ul>
           </section>
 
           <section>
-            <h3>Sidebars</h3>
+            <h3>Zoom split, JSON &amp; pretty view</h3>
             <ul>
               <li>
-                <strong>Left - Library</strong> - built-in furniture stubs and custom polygons you
-                marked.
+                <strong>Split 2x / 4x</strong> controls how cells subdivide when zooming.
               </li>
               <li>
-                <strong>Right - Properties</strong> - cell size <em>a</em>, floor size, label font
-                size, selection fields, and <strong>Generate matrix</strong> (codes on the floor
-                grid with empty cells as 0).
+                Right panel: download / copy / load floor JSON (`category`, `elementType`,
+                `objectId`, rotation, unusable cells).
+              </li>
+              <li>
+                <strong>Pretty view</strong> keeps your planner state — Back restores the same
+                layout. Labels use in-app prompts, not browser dialogs.
               </li>
             </ul>
           </section>

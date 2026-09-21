@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
-import type { FloorConfig } from '../types/geometry';
+import type { FloorConfig, SubdivisionMode } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 import {
   getFloorBaseUnit,
   getGridLevel,
   getLevelCellSize,
+  getMaxLevel,
   getVisibleLinePositions,
   getVisibleWorldBounds,
 } from '../geometry/grid';
@@ -15,13 +16,12 @@ interface GridProps {
   showGrid: boolean;
   svgWidth: number;
   svgHeight: number;
-  /** When false, draw infinite paper lines (not clipped to floor). */
-  clipToFloor?: boolean;
+  subdivision: SubdivisionMode;
 }
 
 /**
- * Hierarchical grid. Lines cover the visible viewport (FigJam-style infinite
- * paper). Major = Level 0 (= a × 16), minor = current level (down to `a`).
+ * First-quadrant infinite paper grid (x≥0, y≥0). Not clipped to floor —
+ * continues into the grayed exterior beyond the designated floor.
  */
 const Grid: React.FC<GridProps> = ({
   floor,
@@ -29,9 +29,10 @@ const Grid: React.FC<GridProps> = ({
   showGrid,
   svgWidth,
   svgHeight,
-  clipToFloor = false,
+  subdivision,
 }) => {
-  const baseUnit = getFloorBaseUnit(floor);
+  const baseUnit = getFloorBaseUnit(floor, subdivision);
+  const maxLevel = getMaxLevel(subdivision);
 
   const { lines, level, majorSize, minorSize, bounds } = useMemo(() => {
     if (!showGrid) {
@@ -45,13 +46,13 @@ const Grid: React.FC<GridProps> = ({
     }
 
     const world = getVisibleWorldBounds(viewport, svgWidth, svgHeight);
-    const minX = clipToFloor ? Math.max(0, world.minX) : world.minX;
-    const maxX = clipToFloor ? Math.min(floor.width, world.maxX) : world.maxX;
-    const minY = clipToFloor ? Math.max(0, world.minY) : world.minY;
-    const maxY = clipToFloor ? Math.min(floor.height, world.maxY) : world.maxY;
+    const minX = Math.max(0, world.minX);
+    const maxX = Math.max(0, world.maxX);
+    const minY = Math.max(0, world.minY);
+    const maxY = Math.max(0, world.maxY);
 
-    const currentLevel = getGridLevel(viewport.zoom, baseUnit);
-    const minor = getLevelCellSize(currentLevel, baseUnit);
+    const currentLevel = getGridLevel(viewport.zoom, baseUnit, maxLevel, subdivision);
+    const minor = getLevelCellSize(currentLevel, baseUnit, subdivision);
     const major = baseUnit;
 
     return {
@@ -64,7 +65,7 @@ const Grid: React.FC<GridProps> = ({
       minorSize: minor,
       bounds: { minX, maxX, minY, maxY },
     };
-  }, [viewport, floor, showGrid, svgWidth, svgHeight, clipToFloor, baseUnit]);
+  }, [viewport, showGrid, svgWidth, svgHeight, baseUnit, maxLevel, subdivision]);
 
   if (!showGrid) return null;
 
@@ -74,19 +75,14 @@ const Grid: React.FC<GridProps> = ({
     return rem < 1e-6 || Math.abs(rem - majorSize) < 1e-6;
   };
 
-  const pad = minorSize * 2;
-  const x1 = bounds.minX - pad;
-  const x2 = bounds.maxX + pad;
-  const y1 = bounds.minY - pad;
+  const pad = Math.max(minorSize * 2, 1);
+  const y1 = Math.max(0, bounds.minY - pad);
   const y2 = bounds.maxY + pad;
+  const x1 = Math.max(0, bounds.minX - pad);
+  const x2 = bounds.maxX + pad;
 
   return (
-    <g
-      id="grid"
-      data-level={level}
-      data-cell-size={minorSize}
-      clipPath={clipToFloor ? 'url(#floor-clip)' : undefined}
-    >
+    <g id="grid" data-level={level} data-cell-size={minorSize}>
       {lines.v.map((x) => (
         <line
           key={`v-${x}`}

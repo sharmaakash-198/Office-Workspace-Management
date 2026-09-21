@@ -1,27 +1,32 @@
 import React from 'react';
-import type { Entity, FloorConfig } from '../types/geometry';
-import type { FloorMatrix } from '../geometry/matrix';
+import type { Entity, FloorConfig, FloorZone, SubdivisionMode } from '../types/geometry';
 
 interface PropertiesPanelProps {
   floor: FloorConfig;
+  subdivision: SubdivisionMode;
   onFloorChange: (next: FloorConfig) => void;
+  onSubdivisionChange: (next: SubdivisionMode) => void;
   selected: Entity[];
   onUpdateSelected: (patch: Partial<Entity>) => void;
-  matrix: FloorMatrix | null;
-  onGenerateMatrix: () => void;
-  onCopyMatrix: () => void;
-  onCopyMatrixJson: () => void;
+  zones: FloorZone[];
+  onDeleteZone: (id: string) => void;
+  onExportJson: () => void;
+  onCopyJson: () => void;
+  onImportJson: (file: File) => void;
 }
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   floor,
+  subdivision,
   onFloorChange,
+  onSubdivisionChange,
   selected,
   onUpdateSelected,
-  matrix,
-  onGenerateMatrix,
-  onCopyMatrix,
-  onCopyMatrixJson,
+  zones,
+  onDeleteZone,
+  onExportJson,
+  onCopyJson,
+  onImportJson,
 }) => {
   const single = selected.length === 1 ? selected[0] : null;
 
@@ -32,7 +37,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <section className="prop-section">
         <h3>Grid</h3>
         <label className="prop-field">
-          <span>Cell size a (m)</span>
+          <span>Cell size a</span>
           <input
             type="number"
             min={0.05}
@@ -44,28 +49,38 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           />
         </label>
         <label className="prop-field">
-          <span>Floor width (m)</span>
+          <span>Floor cols</span>
           <input
             type="number"
             min={4}
             step={1}
-            value={floor.width}
+            value={floor.cols}
             onChange={(e) =>
-              onFloorChange({ ...floor, width: Math.max(4, Number(e.target.value) || 64) })
+              onFloorChange({ ...floor, cols: Math.max(4, Number(e.target.value) || 64) })
             }
           />
         </label>
         <label className="prop-field">
-          <span>Floor height (m)</span>
+          <span>Floor rows</span>
           <input
             type="number"
             min={4}
             step={1}
-            value={floor.height}
+            value={floor.rows}
             onChange={(e) =>
-              onFloorChange({ ...floor, height: Math.max(4, Number(e.target.value) || 64) })
+              onFloorChange({ ...floor, rows: Math.max(4, Number(e.target.value) || 64) })
             }
           />
+        </label>
+        <label className="prop-field">
+          <span>Zoom split</span>
+          <select
+            value={subdivision}
+            onChange={(e) => onSubdivisionChange(Number(e.target.value) as SubdivisionMode)}
+          >
+            <option value={2}>2x (a → a/2 → … → a/16)</option>
+            <option value={4}>4x (a → a/4 → a/16)</option>
+          </select>
         </label>
       </section>
 
@@ -74,24 +89,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         {selected.length === 0 && <p className="panel-hint">Select an entity on the canvas.</p>}
         {single && (
           <>
+            <p className="panel-hint mono">
+              {single.category} / {single.elementType}
+              <br />
+              id: {single.objectId}
+            </p>
             <label className="prop-field">
-              <span>Label / text</span>
+              <span>Label</span>
               <input
                 type="text"
                 value={single.label ?? ''}
                 onChange={(e) => onUpdateSelected({ label: e.target.value })}
               />
             </label>
-            {single.kind !== 'text' && (
-              <label className="prop-field">
-                <span>Code</span>
-                <input
-                  type="number"
-                  value={single.code}
-                  onChange={(e) => onUpdateSelected({ code: Number(e.target.value) || 0 })}
-                />
-              </label>
-            )}
             <label className="prop-field">
               <span>Colour</span>
               <input
@@ -100,7 +110,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onChange={(e) => onUpdateSelected({ color: e.target.value })}
               />
             </label>
-            {single.kind === 'text' ? (
+            {single.category === 'text' ? (
               <label className="prop-field">
                 <span>Font size</span>
                 <input
@@ -127,36 +137,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <span className="panel-hint mono">{(single.fontSize ?? 1).toFixed(1)}×</span>
               </label>
             )}
-            {single.kind !== 'polygon' && single.kind !== 'text' && (
-              <>
-                <label className="prop-field">
-                  <span>Width (m)</span>
-                  <input
-                    type="number"
-                    min={0.05}
-                    step={0.05}
-                    value={single.width}
-                    onChange={(e) =>
-                      onUpdateSelected({ width: Math.max(0.05, Number(e.target.value) || 0.05) })
-                    }
-                  />
-                </label>
-                <label className="prop-field">
-                  <span>Height (m)</span>
-                  <input
-                    type="number"
-                    min={0.05}
-                    step={0.05}
-                    value={single.height}
-                    onChange={(e) =>
-                      onUpdateSelected({ height: Math.max(0.05, Number(e.target.value) || 0.05) })
-                    }
-                  />
-                </label>
-              </>
-            )}
             <p className="panel-hint mono">
-              ({Math.round(single.x)}, {Math.round(single.y)})
+              origin ({single.origin.col}, {single.origin.row}) · {single.widthCells}×
+              {single.heightCells} cells · scale L{single.scaleLevel}
             </p>
           </>
         )}
@@ -166,36 +149,49 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       </section>
 
       <section className="prop-section">
-        <h3>Matrix</h3>
-        <p className="panel-hint">
-          Covers the full floor at cell size a. Row 0 is the top of the floor. Empty = 0.
-        </p>
+        <h3>Zones</h3>
+        {zones.length === 0 && <p className="panel-hint">No marked zones.</p>}
+        <ul className="zone-list">
+          {zones.map((z) => (
+            <li key={z.id} className="zone-list-item">
+              <span
+                className="zone-swatch"
+                style={{ background: z.color }}
+                title={z.label}
+              />
+              <span>{z.label}</span>
+              <button type="button" className="toolbar-btn ghost" onClick={() => onDeleteZone(z.id)}>
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="prop-section">
+        <h3>Floor JSON</h3>
+        <p className="panel-hint">Export layout for pretty-ui (no occupancy matrix).</p>
         <div className="prop-actions">
-          <button type="button" className="toolbar-btn" onClick={onGenerateMatrix}>
-            Generate
+          <button type="button" className="toolbar-btn" onClick={onExportJson}>
+            Download JSON
           </button>
-          <button
-            type="button"
-            className="toolbar-btn"
-            onClick={onCopyMatrix}
-            disabled={!matrix || matrix.rows === 0}
-          >
-            Copy matrix
-          </button>
-          <button
-            type="button"
-            className="toolbar-btn"
-            onClick={onCopyMatrixJson}
-            disabled={!matrix || matrix.rows === 0}
-          >
+          <button type="button" className="toolbar-btn" onClick={onCopyJson}>
             Copy JSON
           </button>
+          <label className="toolbar-btn" style={{ cursor: 'pointer' }}>
+            Load JSON
+            <input
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onImportJson(f);
+                e.target.value = '';
+              }}
+            />
+          </label>
         </div>
-        {matrix && matrix.rows > 0 && (
-          <pre className="matrix-preview">
-            {matrix.matrix.map((row) => row.join(' ')).join('\n')}
-          </pre>
-        )}
       </section>
     </aside>
   );
