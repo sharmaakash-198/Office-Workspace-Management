@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Viewport } from '../types/viewport';
-import type { EditorTool } from '../types/geometry';
+import type { EditorTool, SubdivisionMode } from '../types/geometry';
 import { listDrafts } from '../lib/drafts';
 
 interface ToolbarProps {
@@ -10,9 +10,11 @@ interface ToolbarProps {
   snapEnabled: boolean;
   includeGridOnExport: boolean;
   theme: 'dark' | 'light';
+  subdivision: SubdivisionMode;
   canUndo: boolean;
   canRedo: boolean;
   canPaste: boolean;
+  canDelete: boolean;
   onTool: (tool: EditorTool) => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
@@ -21,16 +23,19 @@ interface ToolbarProps {
   onToggleSnap: () => void;
   onToggleExportGrid: () => void;
   onToggleTheme: () => void;
+  onSubdivisionChange: (mode: SubdivisionMode) => void;
   onUndo: () => void;
   onRedo: () => void;
   onCopy: () => void;
   onPaste: () => void;
+  onDelete: () => void;
   onHowToUse: () => void;
   onSaveDraft: (name: string) => void;
   onLoadDraft: (name: string) => void;
   onExportPng: () => void;
   onExportSvg: () => void;
   onExportPdf: () => void;
+  onOpenPretty: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -40,9 +45,11 @@ const Toolbar: React.FC<ToolbarProps> = ({
   snapEnabled,
   includeGridOnExport,
   theme,
+  subdivision,
   canUndo,
   canRedo,
   canPaste,
+  canDelete,
   onTool,
   onZoomIn,
   onZoomOut,
@@ -51,16 +58,19 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onToggleSnap,
   onToggleExportGrid,
   onToggleTheme,
+  onSubdivisionChange,
   onUndo,
   onRedo,
   onCopy,
   onPaste,
+  onDelete,
   onHowToUse,
   onSaveDraft,
   onLoadDraft,
   onExportPng,
   onExportSvg,
   onExportPdf,
+  onOpenPretty,
 }) => {
   const [draftOpen, setDraftOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -129,6 +139,15 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           Paste
         </button>
+        <button
+          type="button"
+          className="toolbar-btn"
+          onClick={onDelete}
+          disabled={!canDelete}
+          title="Delete selected (Del)"
+        >
+          Delete
+        </button>
       </div>
 
       <div className="toolbar-divider" />
@@ -137,7 +156,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
         <button type="button" className="toolbar-btn icon-btn" onClick={onZoomOut} title="Zoom out">
           −
         </button>
-        <span className="zoom-display" title={`Zoom scale: ${viewport.zoom.toFixed(1)} px/m`}>
+        <span className="zoom-display" title={`Zoom scale: ${viewport.zoom.toFixed(1)} px/unit`}>
           {zoomPercent}%
         </span>
         <button type="button" className="toolbar-btn icon-btn" onClick={onZoomIn} title="Zoom in">
@@ -165,11 +184,22 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           Snap
         </button>
+        <button
+          type="button"
+          className={`toolbar-btn toggle-btn ${subdivision === 2 ? 'active' : ''}`}
+          onClick={() => onSubdivisionChange(subdivision === 2 ? 4 : 2)}
+          title="Toggle 2x / 4x cell split"
+        >
+          Split {subdivision}x
+        </button>
       </div>
 
       <div className="toolbar-spacer" />
 
       <div className="toolbar-group toolbar-menus">
+        <button type="button" className="toolbar-btn" onClick={onOpenPretty}>
+          Pretty view
+        </button>
         <button type="button" className="toolbar-btn" onClick={onHowToUse}>
           How to use
         </button>
@@ -224,12 +254,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   type="button"
                   className="menu-item"
                   onClick={() => {
-                    onLoadDraft(d.name);
+                    onLoadDraft(d.name!);
                     setDraftOpen(false);
                   }}
                 >
                   {d.name}
-                  <small>{new Date(d.savedAt).toLocaleString()}</small>
+                  <small>{d.savedAt ? new Date(d.savedAt).toLocaleString() : ''}</small>
                 </button>
               ))}
             </div>

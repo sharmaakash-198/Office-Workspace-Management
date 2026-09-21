@@ -1,0 +1,127 @@
+{
+  "categories": [
+    {
+      "category": "workstation",
+      "label": "Workstation",
+      "types": [
+        {
+          "elementType": "computer",
+          "label": "Computer desk",
+          "svg": "computer.svg",
+          "widthCells": 2,
+          "heightCells": 1,
+          "color": "#3b82f6"
+        },
+        {
+          "elementType": "corner-desk",
+          "label": "Corner desk",
+          "svg": "corner-desk.svg",
+          "widthCells": 3,
+          "heightCells": 2,
+          "color": "#2563eb"
+        }
+      ]
+    },
+    {
+      "category": "plant",
+      "label": "Plant",
+      "types": [
+        {
+          "elementType": "plant",
+          "label": "Small plant",
+          "svg": "plant.svg",
+          "widthCells": 1,
+          "heightCells": 1,
+          "color": "#22c55e"
+        },
+        {
+          "elementType": "large-plant",
+          "label": "Large plant",
+          "svg": "large-plant.svg",
+          "widthCells": 2,
+          "heightCells": 2,
+          "color": "#16a34a"
+        }
+      ]
+    },
+    {
+      "category": "meeting_room",
+      "label": "Meeting room",
+      "types": [
+        {
+          "elementType": "table",
+          "label": "Meeting table",
+          "svg": "table.svg",
+          "widthCells": 4,
+          "heightCells": 3,
+          "color": "#a855f7"
+        },
+        {
+          "elementType": "round-table",
+          "label": "Round table",
+          "svg": "round-table.svg",
+          "widthCells": 3,
+          "heightCells": 3,
+          "color": "#9333ea"
+        }
+      ]
+    },
+    {
+      "category": "cafeteria",
+      "label": "Cafeteria",
+      "types": [
+        {
+          "elementType": "dining-table-6",
+          "label": "Dining table",
+          "svg": "dining-table-6.svg",
+          "widthCells": 4,
+          "heightCells": 2,
+          "color": "#f59e0b"
+        },
+        {
+          "elementType": "bar-counter",
+          "label": "Bar counter",
+          "svg": "bar-counter.svg",
+          "widthCells": 5,
+          "heightCells": 2,
+          "color": "#d97706"
+        }
+      ]
+    },
+    {
+      "category": "seating",
+      "label": "Seating",
+      "types": [
+        {
+          "elementType": "chair",
+          "label": "Chair",
+          "svg": "chair.svg",
+          "widthCells": 1,
+          "heightCells": 1,
+          "color": "#64748b"
+        },
+        {
+          "elementType": "couch",
+          "label": "Couch",
+          "svg": "couch.svg",
+          "widthCells": 3,
+          "heightCells": 2,
+          "color": "#475569"
+        }
+      ]
+    },
+    {
+      "category": "text",
+      "label": "Text",
+      "types": [
+        {
+          "elementType": "text",
+          "label": "Text block",
+          "widthCells": 3,
+          "heightCells": 1,
+          "color": "#64748b"
+        }
+      ]
+    }
+  ]
+}

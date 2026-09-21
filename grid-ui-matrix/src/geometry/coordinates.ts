@@ -1,4 +1,5 @@
 import type { FloorConfig, Point } from '../types/geometry';
+import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 
 /**
@@ -54,10 +55,17 @@ export function minZoomToFitFloor(
 ): number {
   const usableW = Math.max(1, svgWidth - paddingPx * 2);
   const usableH = Math.max(1, svgHeight - paddingPx * 2);
-  return Math.min(usableW / floor.width, usableH / floor.height);
+  const w = floorWorldWidth(floor);
+  const h = floorWorldHeight(floor);
+  return Math.min(usableW / w, usableH / h);
 }
 
-/** Viewport that fits + centers the entire working floor (max zoom-out target). */
+/** Screen-space gutter so origin/axis labels stay readable (bottom-left). */
+export const AXIS_GUTTER_PX = 36;
+
+/**
+ * Fit floor with world (0,0) inset from the bottom-left by AXIS_GUTTER_PX.
+ */
 export function fitFloorViewport(
   floor: FloorConfig,
   svgWidth: number,
@@ -65,14 +73,15 @@ export function fitFloorViewport(
   paddingPx = 48,
 ): Viewport {
   const zoom = minZoomToFitFloor(floor, svgWidth, svgHeight, paddingPx);
-  const panX = (svgWidth - floor.width * zoom) / 2;
-  const panY = (svgHeight + floor.height * zoom) / 2;
-  return { zoom, panX, panY };
+  return {
+    zoom,
+    panX: AXIS_GUTTER_PX,
+    panY: svgHeight - AXIS_GUTTER_PX,
+  };
 }
 
 /**
- * Close-up initial camera: fine cells fill the screen (FigJam feel),
- * centered near the origin of the working floor.
+ * Close-up initial camera with origin inset from the bottom-left.
  */
 export function initialCloseUpViewport(
   floor: FloorConfig,
@@ -81,13 +90,10 @@ export function initialCloseUpViewport(
   targetCellPx = 48,
 ): Viewport {
   const zoom = Math.max(targetCellPx / floor.a, minZoomToFitFloor(floor, svgWidth, svgHeight));
-  // Show roughly the lower-left portion of the floor, like FigJam opening close-up.
-  const worldCenterX = Math.min(floor.width * 0.25, (svgWidth / zoom) * 0.45);
-  const worldCenterY = Math.min(floor.height * 0.25, (svgHeight / zoom) * 0.45);
   return {
     zoom,
-    panX: svgWidth / 2 - worldCenterX * zoom,
-    panY: svgHeight / 2 + worldCenterY * zoom,
+    panX: AXIS_GUTTER_PX,
+    panY: svgHeight - AXIS_GUTTER_PX,
   };
 }
 
@@ -103,4 +109,24 @@ export function clampZoomAround(
   if (clamped === viewport.zoom) return viewport;
   const factor = clamped / viewport.zoom;
   return zoomAround(viewport, factor, anchor);
+}
+
+/**
+ * Clamp pan so the origin cannot move past the bottom-left gutter.
+ * You may pan into +X / +Y; you cannot reveal past the gutter into empty void.
+ *
+ *   panX ≤ AXIS_GUTTER_PX
+ *   panY ≥ svgHeight - AXIS_GUTTER_PX
+ */
+export function clampViewportToFirstQuadrant(
+  viewport: Viewport,
+  svgWidth: number,
+  svgHeight: number,
+): Viewport {
+  void svgWidth;
+  return {
+    zoom: viewport.zoom,
+    panX: Math.min(AXIS_GUTTER_PX, viewport.panX),
+    panY: Math.max(svgHeight - AXIS_GUTTER_PX, viewport.panY),
+  };
 }

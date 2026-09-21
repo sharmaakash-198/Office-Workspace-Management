@@ -1,63 +1,4 @@
-import type { EntityKind, LibraryItem } from '../types/geometry';
-
-/** Built-in library stubs - colours are mutable in the editor. */
-export const DEFAULT_ENTITY_LIBRARY: LibraryItem[] = [
-  {
-    id: 'workstation',
-    kind: 'workstation',
-    label: 'Workstation',
-    code: 1,
-    defaultWidth: 1.2,
-    defaultHeight: 0.8,
-    color: '#3b82f6',
-  },
-  {
-    id: 'plant',
-    kind: 'plant',
-    label: 'Plant',
-    code: 2,
-    defaultWidth: 0.5,
-    defaultHeight: 0.5,
-    color: '#22c55e',
-  },
-  {
-    id: 'meeting_room',
-    kind: 'meeting_room',
-    label: 'Meeting room',
-    code: 3,
-    defaultWidth: 4,
-    defaultHeight: 3,
-    color: '#a855f7',
-  },
-  {
-    id: 'cafeteria',
-    kind: 'cafeteria',
-    label: 'Cafeteria',
-    code: 4,
-    defaultWidth: 6,
-    defaultHeight: 4,
-    color: '#f59e0b',
-  },
-  {
-    id: 'custom',
-    kind: 'custom',
-    label: 'Custom block',
-    code: 9,
-    defaultWidth: 1,
-    defaultHeight: 1,
-    color: '#94a3b8',
-  },
-  {
-    id: 'text',
-    kind: 'text',
-    label: 'Text block',
-    code: 0,
-    defaultWidth: 3,
-    defaultHeight: 1,
-    color: '#64748b',
-    defaultFontSize: 0.6,
-  },
-];
+import type { CustomLibraryEntry, Entity, LibraryItem } from '../types/geometry';
 
 const CUSTOM_PALETTE = [
   '#ef4444',
@@ -72,22 +13,43 @@ const CUSTOM_PALETTE = [
   '#78716c',
 ];
 
-let customCodeSeq = 10;
-
-export function nextCustomCode(): number {
-  return customCodeSeq++;
-}
-
 export function nextCustomColor(index: number): string {
   return CUSTOM_PALETTE[index % CUSTOM_PALETTE.length];
 }
 
 export function colorForEntity(
-  kind: EntityKind,
+  entity: Entity,
   library: LibraryItem[],
-  entityColor?: string,
 ): string {
-  if (entityColor) return entityColor;
-  const hit = library.find((i) => i.kind === kind || i.id === kind);
+  if (entity.color) return entity.color;
+  const hit = library.find(
+    (i) => i.category === entity.category && i.elementType === entity.elementType,
+  );
   return hit?.color ?? '#94a3b8';
+}
+
+export function deleteCustomLibraryEntry(
+  entries: CustomLibraryEntry[],
+  id: string,
+): CustomLibraryEntry[] {
+  return entries.filter((e) => e.id !== id);
+}
+
+export function upsertCustomCategory(
+  entries: CustomLibraryEntry[],
+  entry: CustomLibraryEntry,
+): CustomLibraryEntry[] {
+  return [...entries.filter((e) => e.id !== entry.id), entry];
+}
+
+export function groupCustomByCategory(
+  entries: CustomLibraryEntry[],
+): Map<string, CustomLibraryEntry[]> {
+  const map = new Map<string, CustomLibraryEntry[]>();
+  for (const e of entries) {
+    const list = map.get(e.category) ?? [];
+    list.push(e);
+    map.set(e.category, list);
+  }
+  return map;
 }

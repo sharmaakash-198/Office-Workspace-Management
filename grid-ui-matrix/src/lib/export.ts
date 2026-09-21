@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import type { FloorConfig } from '../types/geometry';
-import { getBaseUnit, getLevelCellSize, MAX_LEVEL } from '../geometry/grid';
+import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
+import { getBaseUnit, getLevelCellSize, MAX_LEVEL_4 } from '../geometry/grid';
 
 export type ExportThemeColors = {
   canvasBg: string;
@@ -24,7 +25,7 @@ const LIGHT_DEFAULT: ExportThemeColors = {
   axisLabel: 'rgba(71, 85, 105, 0.85)',
 };
 
-/** Default raster resolution: pixels per world meter. */
+/** Default raster resolution: pixels per world unit. */
 const DEFAULT_PPM = 24;
 /** Cap export edge so browsers can still rasterize huge floors. */
 const MAX_EXPORT_EDGE_PX = 8000;
@@ -85,9 +86,11 @@ function injectFullFloorGrid(
   colors: ExportThemeColors,
 ): void {
   while (grid.firstChild) grid.removeChild(grid.firstChild);
-  const baseUnit = getBaseUnit(floor.a, MAX_LEVEL);
-  const minor = getLevelCellSize(MAX_LEVEL, baseUnit); // = a
+  const baseUnit = getBaseUnit(floor.a, 4, MAX_LEVEL_4);
+  const minor = getLevelCellSize(MAX_LEVEL_4, baseUnit, 4);
   const major = baseUnit;
+  const fw = floorWorldWidth(floor);
+  const fh = floorWorldHeight(floor);
 
   const ns = 'http://www.w3.org/2000/svg';
   const addLine = (x1: number, y1: number, x2: number, y2: number, majorLine: boolean) => {
@@ -108,11 +111,11 @@ function injectFullFloorGrid(
     return rem < 1e-6 || Math.abs(rem - major) < 1e-6;
   };
 
-  for (let x = 0; x <= floor.width + 1e-9; x += minor) {
-    addLine(x, 0, x, floor.height, isMajor(x));
+  for (let x = 0; x <= fw + 1e-9; x += minor) {
+    addLine(x, 0, x, fh, isMajor(x));
   }
-  for (let y = 0; y <= floor.height + 1e-9; y += minor) {
-    addLine(0, y, floor.width, y, isMajor(y));
+  for (let y = 0; y <= fh + 1e-9; y += minor) {
+    addLine(0, y, fw, y, isMajor(y));
   }
 }
 
@@ -133,12 +136,14 @@ export function buildFullFloorSvg(
       : LIGHT_DEFAULT);
 
   let ppm = pixelsPerMeter;
-  const rawW = floor.width * ppm;
-  const rawH = floor.height * ppm;
+  const fw = floorWorldWidth(floor);
+  const fh = floorWorldHeight(floor);
+  const rawW = fw * ppm;
+  const rawH = fh * ppm;
   const scaleDown = Math.min(1, MAX_EXPORT_EDGE_PX / Math.max(rawW, rawH, 1));
   ppm *= scaleDown;
-  const widthPx = Math.max(1, Math.round(floor.width * ppm));
-  const heightPx = Math.max(1, Math.round(floor.height * ppm));
+  const widthPx = Math.max(1, Math.round(fw * ppm));
+  const heightPx = Math.max(1, Math.round(fh * ppm));
 
   const clone = liveSvg.cloneNode(true) as SVGSVGElement;
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');

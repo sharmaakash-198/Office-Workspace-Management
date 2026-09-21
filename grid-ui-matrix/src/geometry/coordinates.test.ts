@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  clampViewportToFirstQuadrant,
   clampZoomAround,
   fitFloorViewport,
   getViewportTransform,
@@ -54,7 +55,7 @@ describe('zoomAround', () => {
 });
 
 describe('fit / close-up camera', () => {
-  const floor = { width: 64, height: 64, a: 0.25 };
+  const floor = { cols: 64, rows: 64, a: 0.25 };
 
   it('minZoomToFitFloor is smaller than close-up zoom', () => {
     const minZ = minZoomToFitFloor(floor, 1200, 800);
@@ -62,9 +63,23 @@ describe('fit / close-up camera', () => {
     expect(close.zoom).toBeGreaterThan(minZ);
   });
 
-  it('fitFloorViewport centers the floor', () => {
+  it('fitFloorViewport pins origin inset from bottom-left', () => {
     const fit = fitFloorViewport(floor, 800, 600);
     expect(fit.zoom).toBeCloseTo(minZoomToFitFloor(floor, 800, 600), 9);
+    expect(fit.panX).toBe(36);
+    expect(fit.panY).toBe(600 - 36);
+  });
+
+  it('clampViewportToFirstQuadrant keeps origin within bottom-left gutter', () => {
+    const bad = { zoom: 40, panX: 120, panY: 400 };
+    const fixed = clampViewportToFirstQuadrant(bad, 800, 600);
+    expect(fixed.panX).toBe(36);
+    expect(fixed.panY).toBe(600 - 36);
+
+    const exploring = { zoom: 40, panX: -200, panY: 900 };
+    const ok = clampViewportToFirstQuadrant(exploring, 800, 600);
+    expect(ok.panX).toBe(-200);
+    expect(ok.panY).toBe(900);
   });
 
   it('clampZoomAround respects min/max', () => {

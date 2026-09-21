@@ -1,51 +1,65 @@
-import type { CellRef, FloorConfig, Point, Rect } from '../types/geometry';
+import type { CellRef, FloorConfig, Point, Rect, SubdivisionMode } from '../types/geometry';
+import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 import { screenToWorld } from './coordinates';
 
-/** Each grid level subdivides the previous level ×4 per axis (16 sub-cells). */
+/** Default 4x mode: one cell → 16 finer cells per step. */
+export const DEFAULT_SUBDIVISION: SubdivisionMode = 4;
+
+/** Max level for subdivision 4: a×16 → a×4 → a. */
+export const MAX_LEVEL_4 = 2;
+
+/** Max level for subdivision 2: a×16 → a×8 → a×4 → a×2 → a. */
+export const MAX_LEVEL_2 = 4;
+
+/** @deprecated use getMaxLevel(subdivision) */
+export const MAX_LEVEL = MAX_LEVEL_4;
+
+/** @deprecated use subdivision from floor document */
 export const SUBDIVISION = 4;
 
-/** Bounded to 3 levels: 0 (coarsest) .. MAX_LEVEL (finest = `a`). */
-export const MAX_LEVEL = 2;
-
-/** Minimum on-screen pixel size a cell must have before we reveal the next finer level. */
 const MIN_CELL_PX = 24;
+
+export function getMaxLevel(subdivision: SubdivisionMode = DEFAULT_SUBDIVISION): number {
+  return subdivision === 2 ? MAX_LEVEL_2 : MAX_LEVEL_4;
+}
 
 /**
  * Coarsest (Level 0) cell size derived from finest cell `a`.
- * Level 0 = a × 4^MAX_LEVEL, Level MAX = a.
+ * Level 0 = a × subdivision^maxLevel, Level MAX = a.
  */
-export function getBaseUnit(a: number, maxLevel: number = MAX_LEVEL): number {
-  return a * SUBDIVISION ** maxLevel;
+export function getBaseUnit(
+  a: number,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
+  maxLevel: number = getMaxLevel(subdivision),
+): number {
+  return a * subdivision ** maxLevel;
 }
 
-/** World-unit size of a cell at the given level. Level MAX = a. */
 export function getLevelCellSize(
   level: number,
   baseUnit: number,
-  subdivision: number = SUBDIVISION,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
 ): number {
   return baseUnit / subdivision ** level;
 }
 
-/** Finest cell size from floor config. */
 export function getFinestCellSize(floor: FloorConfig): number {
   return floor.a;
 }
 
-export function getFloorBaseUnit(floor: FloorConfig): number {
-  return getBaseUnit(floor.a);
+export function getFloorBaseUnit(
+  floor: FloorConfig,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
+): number {
+  return getBaseUnit(floor.a, subdivision);
 }
 
-/**
- * Finest grid level visible at this zoom, bounded to [0, maxLevel].
- * Pass `baseUnit` (= a × 4^MAX_LEVEL).
- */
 export function getGridLevel(
   zoom: number,
   baseUnit: number,
-  maxLevel: number = MAX_LEVEL,
-  subdivision: number = SUBDIVISION,
+  maxLevel: number = MAX_LEVEL_4,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
 ): number {
   let level = 0;
   while (level < maxLevel) {
@@ -61,26 +75,24 @@ export function getVisibleLinePositions(
   worldMax: number,
   cellSize: number,
 ): number[] {
-  const start = Math.floor(worldMin / cellSize) * cellSize;
+  const start = Math.max(0, Math.floor(worldMin / cellSize) * cellSize);
   const end = Math.ceil(worldMax / cellSize) * cellSize;
   const positions: number[] = [];
-  // Cap line count for performance on huge zooms-out of infinite paper.
   const maxLines = 400;
   const count = Math.floor((end - start) / cellSize) + 1;
   if (count > maxLines) {
     const step = Math.ceil(count / maxLines) * cellSize;
     for (let pos = start; pos <= end + step / 2; pos += step) {
-      positions.push(pos);
+      if (pos >= 0) positions.push(pos);
     }
     return positions;
   }
   for (let pos = start; pos <= end + cellSize / 2; pos += cellSize) {
-    positions.push(pos);
+    if (pos >= 0) positions.push(pos);
   }
   return positions;
 }
 
-/** World-space bounding box currently visible inside the viewport. */
 export function getVisibleWorldBounds(
   viewport: Viewport,
   svgWidth: number,
@@ -100,7 +112,7 @@ export function worldToCell(
   point: Point,
   level: number,
   baseUnit: number,
-  subdivision: number = SUBDIVISION,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
 ): CellRef {
   const cellSize = getLevelCellSize(level, baseUnit, subdivision);
   return {
@@ -113,7 +125,7 @@ export function worldToCell(
 export function cellToWorldRect(
   cell: CellRef,
   baseUnit: number,
-  subdivision: number = SUBDIVISION,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
 ): Rect {
   const cellSize = getLevelCellSize(cell.level, baseUnit, subdivision);
   return {
@@ -122,6 +134,25 @@ export function cellToWorldRect(
     width: cellSize,
     height: cellSize,
   };
+}
+
+/** Finest-grid cell from world point. */
+export function worldToFinestCell(
+  point: Point,
+  a: number,
+): { col: number; row: number } {
+  return {
+    col: Math.floor(point.x / a),
+    row: Math.floor(point.y / a),
+  };
+}
+
+export function finestCellToWorldRect(
+  col: number,
+  row: number,
+  a: number,
+): Rect {
+  return { x: col * a, y: row * a, width: a, height: a };
 }
 
 export function cellKey(cell: CellRef): string {
@@ -133,16 +164,16 @@ export function isSameCell(a: CellRef | null, b: CellRef | null): boolean {
   return a.level === b.level && a.col === b.col && a.row === b.row;
 }
 
-/** Cells at `level` whose rectangles intersect the world-space AABB. */
 export function cellsInWorldRect(
   rect: Rect,
   level: number,
   baseUnit: number,
+  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
 ): CellRef[] {
-  const cellSize = getLevelCellSize(level, baseUnit);
-  const minCol = Math.floor(rect.x / cellSize);
+  const cellSize = getLevelCellSize(level, baseUnit, subdivision);
+  const minCol = Math.max(0, Math.floor(rect.x / cellSize));
   const maxCol = Math.floor((rect.x + rect.width - 1e-9) / cellSize);
-  const minRow = Math.floor(rect.y / cellSize);
+  const minRow = Math.max(0, Math.floor(rect.y / cellSize));
   const maxRow = Math.floor((rect.y + rect.height - 1e-9) / cellSize);
   const cells: CellRef[] = [];
   for (let row = minRow; row <= maxRow; row++) {
@@ -153,11 +184,20 @@ export function cellsInWorldRect(
   return cells;
 }
 
-/** Normalize a screen marquee into a world-space axis-aligned rect. */
 export function worldRectFromPoints(a: Point, b: Point): Rect {
   const minX = Math.min(a.x, b.x);
   const maxX = Math.max(a.x, b.x);
   const minY = Math.min(a.y, b.y);
   const maxY = Math.max(a.y, b.y);
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+/** Floor clip bounds in world units. */
+export function floorWorldRect(floor: FloorConfig): Rect {
+  return {
+    x: 0,
+    y: 0,
+    width: floorWorldWidth(floor),
+    height: floorWorldHeight(floor),
+  };
 }
