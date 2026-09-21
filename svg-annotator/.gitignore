@@ -1,32 +1,5 @@
-# Dependencies
 node_modules/
-
-# Build output
-/dist/
-/coverage/
+dist/
+output/
 *.tsbuildinfo
-
-# Vite cache
-.vite/
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# Editor / OS files
-.vscode/
-.idea/
 .DS_Store
-Thumbs.db
-
-# Local temp files
-*.swp
-*.swo
-*.local
