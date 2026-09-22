@@ -4,6 +4,8 @@ export type PromptRequest = {
   title: string;
   message?: string;
   defaultValue?: string;
+  /** Shown when value is empty (not pre-filled). */
+  placeholder?: string;
   confirmLabel?: string;
 };
 
@@ -45,6 +47,7 @@ export const PromptToast: React.FC<PromptToastProps> = ({
           ref={inputRef}
           type="text"
           value={value}
+          placeholder={request.placeholder}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') onSubmit(value);

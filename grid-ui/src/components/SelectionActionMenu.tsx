@@ -5,26 +5,29 @@ interface SelectionActionMenuProps {
   y: number;
   cellCount: number;
   canPaste: boolean;
+  hasUnusableInSelection: boolean;
   onMarkPolygon: () => void;
   onPaste: () => void;
   onCopyZone: () => void;
   onMarkZone: () => void;
   onMarkUnusable: () => void;
+  onLabelUnusable: () => void;
   onClearUnusable: () => void;
   onClear: () => void;
 }
 
-/** Floating menu near a multi-cell selection. */
 const SelectionActionMenu: React.FC<SelectionActionMenuProps> = ({
   x,
   y,
   cellCount,
   canPaste,
+  hasUnusableInSelection,
   onMarkPolygon,
   onPaste,
   onCopyZone,
   onMarkZone,
   onMarkUnusable,
+  onLabelUnusable,
   onClearUnusable,
   onClear,
 }) => {
@@ -42,6 +45,11 @@ const SelectionActionMenu: React.FC<SelectionActionMenuProps> = ({
       <button type="button" className="selection-action-btn" onClick={onMarkUnusable}>
         Mark unusable
       </button>
+      {hasUnusableInSelection && (
+        <button type="button" className="selection-action-btn" onClick={onLabelUnusable}>
+          Label unusable
+        </button>
+      )}
       <button type="button" className="selection-action-btn" onClick={onClearUnusable}>
         Clear unusable
       </button>

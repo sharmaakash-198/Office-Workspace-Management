@@ -17,7 +17,8 @@ describe('cellsToFootprint', () => {
       { level: 0, col: 0, row: 2 },
       { level: 0, col: 0, row: 3 },
     ];
-    const built = cellsToFootprint(cells, 1);
+    const a = 1;
+    const built = cellsToFootprint(cells, a);
     expect(built).not.toBeNull();
     expect(built!.footprint).toHaveLength(6);
     expect(built!.width).toBe(2);
@@ -33,18 +34,19 @@ describe('cellsToFootprint', () => {
 });
 
 describe('cellsToRelativeFinest', () => {
-  it('stores relative finest cells and svg path for an L', () => {
+  it('stores relative finest cells and svg path for an L at level 0', () => {
+    const a = 1; // finest = 1/16
     const cells = [
       { level: 0, col: 0, row: 0 },
       { level: 0, col: 1, row: 0 },
       { level: 0, col: 0, row: 1 },
-      { level: 0, col: 0, row: 2 },
     ];
-    const built = cellsToRelativeFinest(cells, 1, 1, 4);
+    const built = cellsToRelativeFinest(cells, a);
     expect(built).not.toBeNull();
-    expect(built!.cells).toHaveLength(4);
-    expect(built!.widthCells).toBe(2);
-    expect(built!.heightCells).toBe(3);
+    // each level-0 cell expands to 16x16 finest
+    expect(built!.widthCells).toBe(32);
+    expect(built!.heightCells).toBe(32);
+    expect(built!.cells.length).toBe(16 * 16 * 3);
     const path = cellsToSvgPath(built!.cells);
     expect(path.startsWith('M')).toBe(true);
     expect(path.endsWith('Z')).toBe(true);

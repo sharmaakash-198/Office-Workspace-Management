@@ -10,14 +10,15 @@ export type Rect = {
   height: number;
 };
 
-/** Working floor in finest-cell counts; world size = cols*a × rows*a. */
+/**
+ * Working floor in units of `a` (level 0).
+ * World size = cols*a × rows*a. Finest cell = a/16.
+ */
 export type FloorConfig = {
   cols: number;
   rows: number;
   a: number;
 };
-
-export type SubdivisionMode = 2 | 4;
 
 export type GridCell = {
   col: number;
@@ -28,6 +29,7 @@ export type CatalogType = {
   elementType: string;
   label: string;
   svg?: string;
+  /** Size in level-1 (a/4) cells. */
   widthCells: number;
   heightCells: number;
   color: string;
@@ -44,11 +46,12 @@ export type LibraryItem = {
   category: string;
   elementType: string;
   label: string;
+  /** Catalog / library size in a/4 cells (converted to finest on place). */
   widthCells: number;
   heightCells: number;
   color: string;
   svg?: string;
-  /** Relative finest cells for custom polygons. */
+  /** Relative finest (a/16) cells for custom polygons. */
   cells?: GridCell[];
   svgPath?: string;
   fromSelection?: boolean;
@@ -63,11 +66,11 @@ export type Entity = {
   objectId: string;
   category: string;
   elementType: string;
+  /** Origin in finest (a/16) cells. */
   origin: GridCell;
+  /** Size in finest (a/16) cells. */
   widthCells: number;
   heightCells: number;
-  /** 0 = finest placement; each +1 multiplies size by subdivision. */
-  scaleLevel: number;
   /** Anticlockwise only: 0 | 90 | 180 | 270. */
   rotation?: 0 | 90 | 180 | 270;
   color?: string;
@@ -75,7 +78,7 @@ export type Entity = {
   svg?: string;
   /** Relative finest cells for custom polygons. */
   cells?: GridCell[];
-  /** Boundary path in cell-unit coords (pretty-ui). */
+  /** Boundary path in finest-cell coords (preview). */
   svgPath?: string;
   fontSize?: number;
 };
@@ -87,7 +90,15 @@ export type FloorZone = {
   color: string;
 };
 
+export type UnusableRegion = {
+  id: string;
+  label: string;
+  cells: GridCell[];
+  color?: string;
+};
+
 export type CellRef = {
+  /** Named grid level: -1 | 0 | 1 | 2 */
   level: number;
   col: number;
   row: number;

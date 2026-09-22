@@ -1,65 +1,84 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MAX_LEVEL_2,
-  MAX_LEVEL_4,
+  FINEST_PER_A,
   cellKey,
   cellToWorldRect,
   getBaseUnit,
   getGridLevel,
-  getLevelCellSize,
-  getMaxLevel,
   getVisibleLinePositions,
   isSameCell,
+  levelCellSize,
   worldToCell,
+  worldToPlacementFinest,
 } from './grid';
 
-describe('getBaseUnit / getLevelCellSize with finest cell a', () => {
-  it('4x: Level MAX equals a; Level 0 is a × 4^MAX', () => {
-    const a = 0.25;
-    const base = getBaseUnit(a, 4);
-    expect(base).toBe(4);
-    expect(getLevelCellSize(0, base, 4)).toBe(4);
-    expect(getLevelCellSize(1, base, 4)).toBe(1);
-    expect(getLevelCellSize(2, base, 4)).toBe(0.25);
+describe('levelCellSize fixed ladder', () => {
+  const a = 0.25;
+
+  it('maps named levels to 2a, a, a/4, a/16', () => {
+    expect(levelCellSize(-1, a)).toBe(2 * a);
+    expect(levelCellSize(0, a)).toBe(a);
+    expect(levelCellSize(1, a)).toBe(a / 4);
+    expect(levelCellSize(2, a)).toBe(a / 16);
   });
 
-  it('2x: supports a → a/2 → … → a/16 from coarsest', () => {
-    const a = 0.25;
-    const base = getBaseUnit(a, 2);
-    expect(getMaxLevel(2)).toBe(MAX_LEVEL_2);
-    expect(base).toBe(a * 2 ** MAX_LEVEL_2);
-    expect(getLevelCellSize(MAX_LEVEL_2, base, 2)).toBe(a);
-    expect(getLevelCellSize(MAX_LEVEL_2 - 1, base, 2)).toBe(a * 2);
+  it('coarsest base unit is 2a', () => {
+    expect(getBaseUnit(a)).toBe(2 * a);
   });
 });
 
 describe('getGridLevel', () => {
-  const baseUnit = 4;
+  const a = 0.25;
 
-  it('stays at Level 0 when zoomed out', () => {
-    expect(getGridLevel(5, baseUnit, MAX_LEVEL_4, 4)).toBe(0);
+  it('stays coarse when zoomed out', () => {
+    expect(getGridLevel(5, a)).toBeLessThanOrEqual(0);
   });
 
-  it('advances to finer levels as zoom increases', () => {
-    expect(getGridLevel(30, baseUnit, MAX_LEVEL_4, 4)).toBeGreaterThanOrEqual(1);
-    expect(getGridLevel(200, baseUnit, MAX_LEVEL_4, 4)).toBe(MAX_LEVEL_4);
+  it('reaches finer levels as zoom increases', () => {
+    // a/4 * zoom >= 24 → zoom >= 96/a; a/16 * zoom >= 24 → zoom >= 384/a
+    expect(getGridLevel(500, a)).toBeGreaterThanOrEqual(1);
+    expect(getGridLevel(2000, a)).toBe(2);
   });
 
-  it('never exceeds max level', () => {
-    expect(getGridLevel(1_000_000, baseUnit, MAX_LEVEL_4, 4)).toBe(MAX_LEVEL_4);
+  it('never exceeds level 2', () => {
+    expect(getGridLevel(1_000_000, a)).toBe(2);
   });
 });
 
 describe('worldToCell / cellToWorldRect', () => {
+  const a = 4;
+
   it('round-trips at level 0', () => {
-    const cell = worldToCell({ x: 9.4, y: 8.1 }, 0, 4, 4);
+    const cell = worldToCell({ x: 9.4, y: 8.1 }, 0, a);
     expect(cell).toEqual({ level: 0, col: 2, row: 2 });
-    expect(cellToWorldRect(cell, 4, 4)).toEqual({ x: 8, y: 8, width: 4, height: 4 });
+    expect(cellToWorldRect(cell, a)).toEqual({ x: 8, y: 8, width: 4, height: 4 });
   });
 
-  it('resolves finer cells at deeper levels', () => {
-    const cell = worldToCell({ x: 8.3, y: 8.3 }, 2, 4, 4);
-    expect(cell).toEqual({ level: 2, col: 33, row: 33 });
+  it('resolves a/4 cells at level 1', () => {
+    const cell = worldToCell({ x: 1.1, y: 0.3 }, 1, a);
+    expect(cell.level).toBe(1);
+    expect(cell.col).toBe(1);
+    expect(cell.row).toBe(0);
+  });
+});
+
+describe('worldToPlacementFinest', () => {
+  it('snaps to a/4 and returns finest origin', () => {
+    const a = 0.25;
+    const cell = worldToPlacementFinest({ x: a * 0.6, y: a * 0.1 }, a);
+    // place size a/4=0.0625; x=0.15 → place col 2 → finest 8
+    expect(cell.col % 4).toBe(0);
+    expect(cell.row % 4).toBe(0);
+    expect(cell.col).toBe(8);
+    expect(cell.row).toBe(0);
+  });
+
+  it('maps catalog placement cell to finest multiples of 4', () => {
+    const a = 1;
+    const cell = worldToPlacementFinest({ x: 0.3, y: 0.9 }, a);
+    // place size 0.25; col=1,row=3 → finest 4,12
+    expect(cell).toEqual({ col: 4, row: 12 });
+    expect(FINEST_PER_A).toBe(16);
   });
 });
 

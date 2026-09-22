@@ -1,12 +1,15 @@
-import type { Entity, GridCell, Point, Rect, SubdivisionMode } from '../types/geometry';
+import type { Entity, GridCell, Point, Rect } from '../types/geometry';
 import { pointInRelativeCells, cellsToSvgPath } from './footprint';
+import { FINEST_PER_A } from './grid';
 
+/** World rect for an entity; `a` is the named unit (finest = a/16). */
 export function entityWorldRect(entity: Entity, a: number): Rect {
+  const f = a / FINEST_PER_A;
   return {
-    x: entity.origin.col * a,
-    y: entity.origin.row * a,
-    width: entity.widthCells * a,
-    height: entity.heightCells * a,
+    x: entity.origin.col * f,
+    y: entity.origin.row * f,
+    width: entity.widthCells * f,
+    height: entity.heightCells * f,
   };
 }
 
@@ -48,14 +51,15 @@ export function entitiesIntersectingRect(
   rect: Rect,
   a: number,
 ): Entity[] {
+  const f = a / FINEST_PER_A;
   return entities.filter((e) => {
     if (isPolygonEntity(e) && e.cells) {
       return e.cells.some((c) =>
         rectsIntersect(rect, {
-          x: (e.origin.col + c.col) * a,
-          y: (e.origin.row + c.row) * a,
-          width: a,
-          height: a,
+          x: (e.origin.col + c.col) * f,
+          y: (e.origin.row + c.row) * f,
+          width: f,
+          height: f,
         }),
       );
     }
@@ -73,47 +77,18 @@ export function translateEntity(entity: Entity, dCol: number, dRow: number): Ent
   };
 }
 
-/** Discrete scale-up: multiply footprint by subdivision on each axis. */
-export function scaleEntityUp(
-  entity: Entity,
-  subdivision: SubdivisionMode,
-): Entity | null {
-  if (isPolygonEntity(entity)) return null;
-  return {
-    ...entity,
-    widthCells: entity.widthCells * subdivision,
-    heightCells: entity.heightCells * subdivision,
-    scaleLevel: entity.scaleLevel + 1,
-  };
-}
-
-/** Inverse of scaleEntityUp; disabled if not evenly divisible. */
-export function scaleEntityDown(
-  entity: Entity,
-  subdivision: SubdivisionMode,
-): Entity | null {
-  if (isPolygonEntity(entity)) return null;
-  if (entity.scaleLevel <= 0) return null;
-  if (entity.widthCells % subdivision !== 0 || entity.heightCells % subdivision !== 0) {
-    return null;
-  }
-  return {
-    ...entity,
-    widthCells: entity.widthCells / subdivision,
-    heightCells: entity.heightCells / subdivision,
-    scaleLevel: entity.scaleLevel - 1,
-  };
-}
-
 export type EntityRotation = 0 | 90 | 180 | 270;
 
-/** Rotate entity 90° anticlockwise; swaps width/height for rects; regenerates polygon path. */
+/** Rotate entity 90° anticlockwise around its center; swaps AABB for rects. */
 export function rotateEntity90CCW(entity: Entity): Entity {
   const nextRot = (((entity.rotation ?? 0) + 90) % 360) as EntityRotation;
 
   if (isPolygonEntity(entity) && entity.cells) {
     const w = entity.widthCells;
-    // (col, row) -> (row, w-1-col) for 90° CCW in grid space
+    const h = entity.heightCells;
+    const cx = entity.origin.col + w / 2;
+    const cy = entity.origin.row + h / 2;
+    // (col, row) relative → 90° CCW: (row, w-1-col) then re-normalize
     const rotated = entity.cells.map((c) => ({
       col: c.row,
       row: w - 1 - c.col,
@@ -132,33 +107,40 @@ export function rotateEntity90CCW(entity: Entity): Entity {
       col: c.col - minCol,
       row: c.row - minRow,
     }));
+    const nw = maxCol - minCol + 1;
+    const nh = maxRow - minRow + 1;
     return {
       ...entity,
       origin: {
-        col: entity.origin.col + minCol,
-        row: entity.origin.row + minRow,
+        col: Math.round(cx - nw / 2),
+        row: Math.round(cy - nh / 2),
       },
-      widthCells: maxCol - minCol + 1,
-      heightCells: maxRow - minRow + 1,
+      widthCells: nw,
+      heightCells: nh,
       cells,
       svgPath: cellsToSvgPath(cells),
       rotation: nextRot,
     };
   }
 
-  // Axis-aligned catalog rect: swap dims on every 90° CCW turn
+  const w = entity.widthCells;
+  const h = entity.heightCells;
+  const cx = entity.origin.col + w / 2;
+  const cy = entity.origin.row + h / 2;
+  const nw = h;
+  const nh = w;
   return {
     ...entity,
-    widthCells: entity.heightCells,
-    heightCells: entity.widthCells,
+    origin: {
+      col: Math.round(cx - nw / 2),
+      row: Math.round(cy - nh / 2),
+    },
+    widthCells: nw,
+    heightCells: nh,
     rotation: nextRot,
   };
 }
 
-/**
- * Free-resize polygon by scaling relative cells into a new AABB
- * (rounded to finest cells) and regenerating svgPath.
- */
 export function resizePolygonEntity(
   entity: Entity,
   next: { origin: GridCell; widthCells: number; heightCells: number },
@@ -233,6 +215,7 @@ export function entitiesInCells(
   a: number,
 ): Entity[] {
   if (cells.length === 0) return [];
+  const f = a / FINEST_PER_A;
   let minCol = Infinity;
   let minRow = Infinity;
   let maxCol = -Infinity;
@@ -244,10 +227,30 @@ export function entitiesInCells(
     maxRow = Math.max(maxRow, c.row);
   }
   const rect: Rect = {
-    x: minCol * a,
-    y: minRow * a,
-    width: (maxCol - minCol + 1) * a,
-    height: (maxRow - minRow + 1) * a,
+    x: minCol * f,
+    y: minRow * f,
+    width: (maxCol - minCol + 1) * f,
+    height: (maxRow - minRow + 1) * f,
   };
   return entitiesIntersectingRect(entities, rect, a);
+}
+
+/** Absolute finest cells occupied by an entity. */
+export function entityOccupiedCells(entity: Entity): GridCell[] {
+  if (isPolygonEntity(entity) && entity.cells) {
+    return entity.cells.map((c) => ({
+      col: entity.origin.col + c.col,
+      row: entity.origin.row + c.row,
+    }));
+  }
+  const cells: GridCell[] = [];
+  for (let r = 0; r < entity.heightCells; r++) {
+    for (let c = 0; c < entity.widthCells; c++) {
+      cells.push({
+        col: entity.origin.col + c,
+        row: entity.origin.row + r,
+      });
+    }
+  }
+  return cells;
 }

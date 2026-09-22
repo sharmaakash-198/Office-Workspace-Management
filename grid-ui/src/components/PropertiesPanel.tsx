@@ -1,15 +1,16 @@
 import React from 'react';
-import type { Entity, FloorConfig, FloorZone, SubdivisionMode } from '../types/geometry';
+import type { Entity, FloorConfig, FloorZone, UnusableRegion } from '../types/geometry';
 
 interface PropertiesPanelProps {
   floor: FloorConfig;
-  subdivision: SubdivisionMode;
   onFloorChange: (next: FloorConfig) => void;
-  onSubdivisionChange: (next: SubdivisionMode) => void;
   selected: Entity[];
   onUpdateSelected: (patch: Partial<Entity>) => void;
   zones: FloorZone[];
   onDeleteZone: (id: string) => void;
+  unusableRegions: UnusableRegion[];
+  onLabelUnusableRegion: (id: string) => void;
+  onDeleteUnusableRegion: (id: string) => void;
   onExportJson: () => void;
   onCopyJson: () => void;
   onImportJson: (file: File) => void;
@@ -17,13 +18,14 @@ interface PropertiesPanelProps {
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   floor,
-  subdivision,
   onFloorChange,
-  onSubdivisionChange,
   selected,
   onUpdateSelected,
   zones,
   onDeleteZone,
+  unusableRegions,
+  onLabelUnusableRegion,
+  onDeleteUnusableRegion,
   onExportJson,
   onCopyJson,
   onImportJson,
@@ -37,7 +39,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       <section className="prop-section">
         <h3>Grid</h3>
         <label className="prop-field">
-          <span>Cell size a</span>
+          <span>Unit a</span>
           <input
             type="number"
             min={0.05}
@@ -49,7 +51,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           />
         </label>
         <label className="prop-field">
-          <span>Floor cols</span>
+          <span>Floor cols (×a)</span>
           <input
             type="number"
             min={4}
@@ -61,7 +63,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           />
         </label>
         <label className="prop-field">
-          <span>Floor rows</span>
+          <span>Floor rows (×a)</span>
           <input
             type="number"
             min={4}
@@ -72,16 +74,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             }
           />
         </label>
-        <label className="prop-field">
-          <span>Zoom split</span>
-          <select
-            value={subdivision}
-            onChange={(e) => onSubdivisionChange(Number(e.target.value) as SubdivisionMode)}
-          >
-            <option value={2}>2x (a → a/2 → … → a/16)</option>
-            <option value={4}>4x (a → a/4 → a/16)</option>
-          </select>
-        </label>
+        <p className="panel-hint">
+          Levels: 2a → a → a/4 → a/16. Place at a/4; store at a/16.
+        </p>
       </section>
 
       <section className="prop-section">
@@ -139,7 +134,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             )}
             <p className="panel-hint mono">
               origin ({single.origin.col}, {single.origin.row}) · {single.widthCells}×
-              {single.heightCells} cells · scale L{single.scaleLevel}
+              {single.heightCells} finest · rot {single.rotation ?? 0}°
             </p>
           </>
         )}
@@ -154,11 +149,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <ul className="zone-list">
           {zones.map((z) => (
             <li key={z.id} className="zone-list-item">
-              <span
-                className="zone-swatch"
-                style={{ background: z.color }}
-                title={z.label}
-              />
+              <span className="zone-swatch" style={{ background: z.color }} title={z.label} />
               <span>{z.label}</span>
               <button type="button" className="toolbar-btn ghost" onClick={() => onDeleteZone(z.id)}>
                 Delete
@@ -169,8 +160,34 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       </section>
 
       <section className="prop-section">
+        <h3>Unusable</h3>
+        {unusableRegions.length === 0 && <p className="panel-hint">No unusable regions.</p>}
+        <ul className="zone-list">
+          {unusableRegions.map((r) => (
+            <li key={r.id} className="zone-list-item">
+              <span>{r.label || '(unlabeled)'}</span>
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={() => onLabelUnusableRegion(r.id)}
+              >
+                Label
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={() => onDeleteUnusableRegion(r.id)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="prop-section">
         <h3>Floor JSON</h3>
-        <p className="panel-hint">Export layout for pretty-ui (no occupancy matrix).</p>
+        <p className="panel-hint">Export layout for preview.</p>
         <div className="prop-actions">
           <button type="button" className="toolbar-btn" onClick={onExportJson}>
             Download JSON

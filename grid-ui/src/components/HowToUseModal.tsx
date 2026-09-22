@@ -26,18 +26,39 @@ const HowToUseModal: React.FC<HowToUseModalProps> = ({ open, onClose }) => {
 
         <div className="modal-body">
           <section>
-            <h3>First-quadrant paper</h3>
+            <h3>Grid levels</h3>
             <ul>
               <li>
-                Origin <strong>(0, 0)</strong> sits at the bottom-left. You can pan up and right
-                freely; you cannot go left or down past the axes.
+                Fixed ladder: <strong>2a → a → a/4 → a/16</strong> (levels −1, 0, 1, 2).
               </li>
               <li>
-                The <strong>designated floor</strong> (cols × rows) is where you place objects. Beyond
-                it the paper is <strong>grayed</strong> — visible grid, not placeable.
+                Default view is <strong>a</strong>. Zoom out merges to <strong>2a</strong>; zoom in
+                reveals a/4 then a/16.
               </li>
               <li>
-                <strong>Fit</strong> pins the origin to the bottom-left of the screen.
+                Place furniture on the <strong>a/4</strong> grid; storage uses finest{' '}
+                <strong>a/16</strong> cells. Entity size is fixed (no scale up/down).
+              </li>
+              <li>
+                When zoomed in, use the bottom/right <strong>nav bars</strong> to pan quickly.
+              </li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Canvas navigation</h3>
+            <ul>
+              <li>
+                First quadrant only: cannot pan into x &lt; 0 or y &lt; 0. Outside the designated
+                floor is grayed and not placeable.
+              </li>
+              <li>
+                <strong>Pan</strong> - drag empty canvas (or Space / Pan tool). Space works normally
+                inside text fields.
+              </li>
+              <li>
+                <strong>Zoom</strong> - scroll or pinch. <strong>Fit</strong> pins (0,0) at
+                bottom-left.
               </li>
             </ul>
           </section>
@@ -46,47 +67,38 @@ const HowToUseModal: React.FC<HowToUseModalProps> = ({ open, onClose }) => {
             <h3>Library &amp; placement</h3>
             <ul>
               <li>
-                Open one category accordion, pick a type (SVG preview), click the canvas. The planner
-                shows occupied cells only; Pretty view draws the SVGs.
+                Category accordion → pick a type (SVG preview) → click the canvas. Planner shows
+                occupied cells only; <strong>Preview</strong> draws SVGs.
               </li>
               <li>
-                After place/select: <strong>Copy</strong>, <strong>Scale up/down</strong>,{' '}
-                <strong>Rotate</strong> (90° anticlockwise: 0/90/180/270), <strong>Delete</strong>.
-              </li>
-              <li>
-                Toolbar <strong>Delete</strong> removes the current selection (same as Del key).
+                After place: Copy / Rotate 90° CCW / Delete. Catalog sizes are in a/4 cells.
               </li>
             </ul>
           </section>
 
           <section>
-            <h3>Irregular floors, polygons &amp; zones</h3>
+            <h3>Cells, zones &amp; unusable</h3>
             <ul>
               <li>
-                Select cells (click / Shift+click / Ctrl+drag). Floating menu:{' '}
-                <strong>Mark unusable</strong> (carve the floor), <strong>Clear unusable</strong>,{' '}
-                <strong>Mark as polygon</strong>, Paste, Copy zone, Mark zone.
+                <strong>Ctrl+drag</strong> always selects cells (even over furniture) for zones /
+                polygons / unusable. Shift+click for multi-entity select.
               </li>
               <li>
-                Polygons can be saved under Custom or a new category, and deleted from the library
-                without removing placed copies.
+                Zone label prompt uses <strong>team-1</strong> as placeholder only.
+              </li>
+              <li>
+                Mark unusable for irregular floors; optional labels (e.g. pillar). Entities cannot
+                sit on unusable cells.
               </li>
             </ul>
           </section>
 
           <section>
-            <h3>Zoom split, JSON &amp; pretty view</h3>
+            <h3>JSON &amp; Preview</h3>
             <ul>
               <li>
-                <strong>Split 2x / 4x</strong> controls how cells subdivide when zooming.
-              </li>
-              <li>
-                Right panel: download / copy / load floor JSON (`category`, `elementType`,
-                `objectId`, rotation, unusable cells).
-              </li>
-              <li>
-                <strong>Pretty view</strong> keeps your planner state — Back restores the same
-                layout. Labels use in-app prompts, not browser dialogs.
+                Download / copy / load floor JSON. Preview shows floor size as{' '}
+                <strong>cols×rows</strong> (e.g. 128×128) in a sticky top bar.
               </li>
             </ul>
           </section>

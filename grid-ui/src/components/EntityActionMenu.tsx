@@ -3,11 +3,7 @@ import React from 'react';
 interface EntityActionMenuProps {
   x: number;
   y: number;
-  canScaleUp: boolean;
-  canScaleDown: boolean;
   onCopy: () => void;
-  onScaleUp: () => void;
-  onScaleDown: () => void;
   onRotate: () => void;
   onDelete: () => void;
   onClose: () => void;
@@ -16,11 +12,7 @@ interface EntityActionMenuProps {
 const EntityActionMenu: React.FC<EntityActionMenuProps> = ({
   x,
   y,
-  canScaleUp,
-  canScaleDown,
   onCopy,
-  onScaleUp,
-  onScaleDown,
   onRotate,
   onDelete,
   onClose,
@@ -34,24 +26,6 @@ const EntityActionMenu: React.FC<EntityActionMenuProps> = ({
     >
       <button type="button" className="selection-action-btn" onClick={onCopy}>
         Copy
-      </button>
-      <button
-        type="button"
-        className="selection-action-btn"
-        onClick={onScaleUp}
-        disabled={!canScaleUp}
-        title="Scale footprint one zoom level coarser"
-      >
-        Scale up
-      </button>
-      <button
-        type="button"
-        className="selection-action-btn"
-        onClick={onScaleDown}
-        disabled={!canScaleDown}
-        title="Scale footprint one zoom level finer"
-      >
-        Scale down
       </button>
       <button
         type="button"

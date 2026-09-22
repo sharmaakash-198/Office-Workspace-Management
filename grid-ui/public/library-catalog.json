@@ -8,16 +8,16 @@
           "elementType": "computer",
           "label": "Computer desk",
           "svg": "computer.svg",
-          "widthCells": 2,
-          "heightCells": 1,
+          "widthCells": 4,
+          "heightCells": 2,
           "color": "#3b82f6"
         },
         {
           "elementType": "corner-desk",
           "label": "Corner desk",
           "svg": "corner-desk.svg",
-          "widthCells": 3,
-          "heightCells": 2,
+          "widthCells": 6,
+          "heightCells": 4,
           "color": "#2563eb"
         }
       ]
@@ -30,16 +30,16 @@
           "elementType": "plant",
           "label": "Small plant",
           "svg": "plant.svg",
-          "widthCells": 1,
-          "heightCells": 1,
+          "widthCells": 2,
+          "heightCells": 2,
           "color": "#22c55e"
         },
         {
           "elementType": "large-plant",
           "label": "Large plant",
           "svg": "large-plant.svg",
-          "widthCells": 2,
-          "heightCells": 2,
+          "widthCells": 4,
+          "heightCells": 4,
           "color": "#16a34a"
         }
       ]
@@ -52,16 +52,16 @@
           "elementType": "table",
           "label": "Meeting table",
           "svg": "table.svg",
-          "widthCells": 4,
-          "heightCells": 3,
+          "widthCells": 8,
+          "heightCells": 6,
           "color": "#a855f7"
         },
         {
           "elementType": "round-table",
           "label": "Round table",
           "svg": "round-table.svg",
-          "widthCells": 3,
-          "heightCells": 3,
+          "widthCells": 6,
+          "heightCells": 6,
           "color": "#9333ea"
         }
       ]
@@ -74,16 +74,16 @@
           "elementType": "dining-table-6",
           "label": "Dining table",
           "svg": "dining-table-6.svg",
-          "widthCells": 4,
-          "heightCells": 2,
+          "widthCells": 8,
+          "heightCells": 4,
           "color": "#f59e0b"
         },
         {
           "elementType": "bar-counter",
           "label": "Bar counter",
           "svg": "bar-counter.svg",
-          "widthCells": 5,
-          "heightCells": 2,
+          "widthCells": 10,
+          "heightCells": 4,
           "color": "#d97706"
         }
       ]
@@ -96,16 +96,16 @@
           "elementType": "chair",
           "label": "Chair",
           "svg": "chair.svg",
-          "widthCells": 1,
-          "heightCells": 1,
+          "widthCells": 2,
+          "heightCells": 2,
           "color": "#64748b"
         },
         {
           "elementType": "couch",
           "label": "Couch",
           "svg": "couch.svg",
-          "widthCells": 3,
-          "heightCells": 2,
+          "widthCells": 6,
+          "heightCells": 4,
           "color": "#475569"
         }
       ]
@@ -117,8 +117,8 @@
         {
           "elementType": "text",
           "label": "Text block",
-          "widthCells": 3,
-          "heightCells": 1,
+          "widthCells": 6,
+          "heightCells": 2,
           "color": "#64748b"
         }
       ]

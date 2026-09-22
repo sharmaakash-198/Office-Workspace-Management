@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import type { FloorConfig } from '../types/geometry';
 import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
-import { getBaseUnit, getLevelCellSize, MAX_LEVEL_4 } from '../geometry/grid';
+import { levelCellSize } from '../geometry/grid';
 
 export type ExportThemeColors = {
   canvasBg: string;
@@ -86,9 +86,8 @@ function injectFullFloorGrid(
   colors: ExportThemeColors,
 ): void {
   while (grid.firstChild) grid.removeChild(grid.firstChild);
-  const baseUnit = getBaseUnit(floor.a, 4, MAX_LEVEL_4);
-  const minor = getLevelCellSize(MAX_LEVEL_4, baseUnit, 4);
-  const major = baseUnit;
+  const minor = levelCellSize(0, floor.a);
+  const major = levelCellSize(-1, floor.a);
   const fw = floorWorldWidth(floor);
   const fh = floorWorldHeight(floor);
 

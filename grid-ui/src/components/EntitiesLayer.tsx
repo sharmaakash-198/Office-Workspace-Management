@@ -2,6 +2,7 @@ import React from 'react';
 import type { Entity } from '../types/geometry';
 import { entityWorldRect, isPolygonEntity } from '../geometry/entities';
 import { cellsToWorldOutline, relativeCellsWorldRects } from '../geometry/footprint';
+import { FINEST_PER_A } from '../geometry/grid';
 
 interface EntitiesLayerProps {
   entities: Entity[];
@@ -13,9 +14,10 @@ interface EntitiesLayerProps {
 
 function shapeLabelSize(entity: Entity, a: number, factor: number): number {
   const scale = entity.fontSize ?? 1;
-  const w = entity.widthCells * a;
-  const h = entity.heightCells * a;
-  return Math.max(a * 0.08, Math.min(w, h) * factor * scale);
+  const f = a / FINEST_PER_A;
+  const w = entity.widthCells * f;
+  const h = entity.heightCells * f;
+  return Math.max(f * 2, Math.min(w, h) * factor * scale);
 }
 
 const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
@@ -25,6 +27,8 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
   colorFor,
   onEntityPointerDown,
 }) => {
+  const f = a / FINEST_PER_A;
+
   return (
     <g id="entities">
       {entities.map((e) => {
@@ -32,11 +36,11 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
         const selected = selectedIds.has(e.objectId);
         const label = e.label ?? e.elementType.replace(/_/g, ' ');
         const bounds = entityWorldRect(e, a);
+        const cx = bounds.x + bounds.width / 2;
+        const cy = bounds.y + bounds.height / 2;
 
         if (e.category === 'text') {
           const fontSize = (e.fontSize ?? 0.5) * a;
-          const cx = bounds.x + bounds.width / 2;
-          const cy = bounds.y + bounds.height / 2;
           return (
             <g
               key={e.objectId}
@@ -55,15 +59,21 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
                   strokeWidth={1}
                   strokeDasharray="4 3"
                   vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
                 />
               )}
-              <g transform={`translate(${cx}, ${cy}) scale(1, -1)`}>
+              <g
+                transform={`translate(${cx}, ${cy}) scale(1, -1)`}
+                pointerEvents="none"
+                style={{ userSelect: 'none' }}
+              >
                 <text
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={fontSize}
                   fill={color}
                   className="entity-label text-block-label"
+                  style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
                   {label || 'Text'}
                 </text>
@@ -76,8 +86,6 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
           const rects = relativeCellsWorldRects(e.origin, e.cells, a);
           const outline = cellsToWorldOutline(e.origin, e.cells, a);
           const pts = outline.map((p) => `${p.x},${p.y}`).join(' ');
-          const cx = bounds.x + bounds.width / 2;
-          const cy = bounds.y + bounds.height / 2;
           const fontSize = shapeLabelSize(e, a, 0.2);
           return (
             <g
@@ -107,13 +115,18 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
                   vectorEffect="non-scaling-stroke"
                 />
               )}
-              <g transform={`translate(${cx}, ${cy}) scale(1, -1)`} pointerEvents="none">
+              <g
+                transform={`translate(${cx}, ${cy}) scale(1, -1)`}
+                pointerEvents="none"
+                style={{ userSelect: 'none' }}
+              >
                 <text
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fontSize={fontSize}
                   fill="currentColor"
                   className="entity-label"
+                  style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
                   {label}
                 </text>
@@ -122,9 +135,8 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
           );
         }
 
-        const cx = bounds.x + bounds.width / 2;
-        const cy = bounds.y + bounds.height / 2;
         const fontSize = shapeLabelSize(e, a, 0.28);
+        // AABB already reflects rotation (dims swapped around center) — no extra SVG rotate.
 
         return (
           <g
@@ -143,15 +155,20 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
               stroke={selected ? '#22c55e' : color}
               strokeWidth={selected ? 2 : 1.5}
               vectorEffect="non-scaling-stroke"
-              rx={a * 0.05}
+              rx={f * 0.8}
             />
-            <g transform={`translate(${cx}, ${cy}) scale(1, -1)`} pointerEvents="none">
+            <g
+              transform={`translate(${cx}, ${cy}) scale(1, -1)`}
+              pointerEvents="none"
+              style={{ userSelect: 'none' }}
+            >
               <text
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize={fontSize}
                 fill="currentColor"
                 className="entity-label"
+                style={{ userSelect: 'none', pointerEvents: 'none' }}
               >
                 {label}
               </text>

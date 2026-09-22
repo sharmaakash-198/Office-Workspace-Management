@@ -551,18 +551,52 @@ body,
   font-size: 12px;
 }
 
+.pretty-toolbar.sticky,
+.pretty-toolbar.fixed-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
 .pretty-layout {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 100vh;
   background: var(--app-bg);
+  padding-top: 52px; /* room for fixed toolbar */
 }
 
 .pretty-canvas {
   flex: 1;
-  padding: 16px;
-  overflow: auto;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  min-height: 0;
+}
+
+.pretty-canvas:active {
+  cursor: grabbing;
+}
+
+.pretty-svg-interactive {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #e8edf3;
+}
+
+.pretty-canvas-bg {
+  fill: #e8edf3;
+}
+
+.pretty-size {
+  margin-left: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .pretty-svg {
@@ -664,6 +698,52 @@ body,
   min-width: 0;
 }
 
+.grid-nav-x {
+  position: absolute;
+  left: 12px;
+  right: 16px;
+  bottom: 26px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(100, 116, 139, 0.18);
+  cursor: pointer;
+  z-index: 5;
+}
+
+.grid-nav-y {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  bottom: 34px;
+  width: 4px;
+  border-radius: 2px;
+  background: rgba(100, 116, 139, 0.18);
+  cursor: pointer;
+  z-index: 5;
+}
+
+.grid-nav-thumb {
+  position: absolute;
+  border-radius: 2px;
+  background: rgba(71, 85, 105, 0.55);
+  min-width: 16px;
+  min-height: 16px;
+}
+
+.grid-nav-x .grid-nav-thumb {
+  top: 0;
+  bottom: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.grid-nav-y .grid-nav-thumb {
+  left: 0;
+  right: 0;
+  width: 100%;
+  min-width: 0;
+}
+
 .editor-svg {
   flex: 1;
   display: block;
@@ -682,12 +762,23 @@ body,
 
 .grid-line.major {
   stroke: var(--grid-major);
-  stroke-width: 1.1;
+  stroke-width: 1.15;
+}
+
+.grid-line.coarse {
+  stroke: var(--grid-major);
+  stroke-width: 1.4;
 }
 
 .grid-line.minor {
   stroke: var(--grid-minor);
-  stroke-width: 0.6;
+  stroke-width: 0.65;
+}
+
+.grid-line.fine {
+  stroke: var(--grid-minor);
+  stroke-width: 0.45;
+  opacity: 0.85;
 }
 
 .grid-origin {
@@ -714,6 +805,8 @@ body,
 .entity-label {
   fill: var(--entity-label);
   font-family: 'DM Sans', system-ui, sans-serif;
+  user-select: none;
+  pointer-events: none;
 }
 
 .resize-handle {

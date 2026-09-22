@@ -1,73 +1,76 @@
-import type { CellRef, FloorConfig, Point, Rect, SubdivisionMode } from '../types/geometry';
+import type { CellRef, FloorConfig, Point, Rect } from '../types/geometry';
 import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 import { screenToWorld } from './coordinates';
 
-/** Default 4x mode: one cell → 16 finer cells per step. */
-export const DEFAULT_SUBDIVISION: SubdivisionMode = 4;
+/** Named levels: -1=2a, 0=a, 1=a/4, 2=a/16. */
+export type NamedGridLevel = -1 | 0 | 1 | 2;
 
-/** Max level for subdivision 4: a×16 → a×4 → a. */
-export const MAX_LEVEL_4 = 2;
+export const NAMED_LEVELS: NamedGridLevel[] = [-1, 0, 1, 2];
 
-/** Max level for subdivision 2: a×16 → a×8 → a×4 → a×2 → a. */
-export const MAX_LEVEL_2 = 4;
+/** Finest cells per unit `a` (level 2 = a/16). */
+export const FINEST_PER_A = 16;
 
-/** @deprecated use getMaxLevel(subdivision) */
-export const MAX_LEVEL = MAX_LEVEL_4;
+/** Placement cells (a/4) per unit `a`. */
+export const PLACE_PER_A = 4;
 
-/** @deprecated use subdivision from floor document */
-export const SUBDIVISION = 4;
+/** Finest cells per placement cell. */
+export const FINEST_PER_PLACE = FINEST_PER_A / PLACE_PER_A; // 4
 
 const MIN_CELL_PX = 24;
 
-export function getMaxLevel(subdivision: SubdivisionMode = DEFAULT_SUBDIVISION): number {
-  return subdivision === 2 ? MAX_LEVEL_2 : MAX_LEVEL_4;
-}
-
-/**
- * Coarsest (Level 0) cell size derived from finest cell `a`.
- * Level 0 = a × subdivision^maxLevel, Level MAX = a.
- */
-export function getBaseUnit(
-  a: number,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-  maxLevel: number = getMaxLevel(subdivision),
-): number {
-  return a * subdivision ** maxLevel;
-}
-
-export function getLevelCellSize(
-  level: number,
-  baseUnit: number,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): number {
-  return baseUnit / subdivision ** level;
+export function levelCellSize(level: NamedGridLevel, a: number): number {
+  switch (level) {
+    case -1:
+      return 2 * a;
+    case 0:
+      return a;
+    case 1:
+      return a / 4;
+    case 2:
+      return a / 16;
+  }
 }
 
 export function getFinestCellSize(floor: FloorConfig): number {
-  return floor.a;
+  return floor.a / FINEST_PER_A;
 }
 
-export function getFloorBaseUnit(
-  floor: FloorConfig,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): number {
-  return getBaseUnit(floor.a, subdivision);
+/** Floor extent in finest-cell counts. */
+export function floorFinestCols(floor: FloorConfig): number {
+  return floor.cols * FINEST_PER_A;
 }
 
-export function getGridLevel(
-  zoom: number,
-  baseUnit: number,
-  maxLevel: number = MAX_LEVEL_4,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): number {
-  let level = 0;
-  while (level < maxLevel) {
-    const nextCellPx = getLevelCellSize(level + 1, baseUnit, subdivision) * zoom;
-    if (nextCellPx < MIN_CELL_PX) break;
-    level++;
+export function floorFinestRows(floor: FloorConfig): number {
+  return floor.rows * FINEST_PER_A;
+}
+
+/** Coarsest cell size (level -1). */
+export function getBaseUnit(a: number): number {
+  return levelCellSize(-1, a);
+}
+
+export function getFloorBaseUnit(floor: FloorConfig): number {
+  return getBaseUnit(floor.a);
+}
+
+/**
+ * Pick named grid level from zoom so the next-finer cell is at least MIN_CELL_PX.
+ * Defaults toward level 0 when zoomed out.
+ */
+export function getGridLevel(zoom: number, a: number): NamedGridLevel {
+  let level: NamedGridLevel = -1;
+  for (let i = 0; i < NAMED_LEVELS.length - 1; i++) {
+    const next = NAMED_LEVELS[i + 1];
+    if (levelCellSize(next, a) * zoom < MIN_CELL_PX) break;
+    level = next;
   }
   return level;
+}
+
+export function getLevelCellSize(level: number, a: number): number {
+  const named = (Math.max(-1, Math.min(2, level)) as NamedGridLevel);
+  return levelCellSize(named, a);
 }
 
 export function getVisibleLinePositions(
@@ -78,7 +81,7 @@ export function getVisibleLinePositions(
   const start = Math.max(0, Math.floor(worldMin / cellSize) * cellSize);
   const end = Math.ceil(worldMax / cellSize) * cellSize;
   const positions: number[] = [];
-  const maxLines = 400;
+  const maxLines = 220;
   const count = Math.floor((end - start) / cellSize) + 1;
   if (count > maxLines) {
     const step = Math.ceil(count / maxLines) * cellSize;
@@ -108,13 +111,8 @@ export function getVisibleWorldBounds(
   };
 }
 
-export function worldToCell(
-  point: Point,
-  level: number,
-  baseUnit: number,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): CellRef {
-  const cellSize = getLevelCellSize(level, baseUnit, subdivision);
+export function worldToCell(point: Point, level: NamedGridLevel, a: number): CellRef {
+  const cellSize = levelCellSize(level, a);
   return {
     level,
     col: Math.floor(point.x / cellSize),
@@ -122,12 +120,8 @@ export function worldToCell(
   };
 }
 
-export function cellToWorldRect(
-  cell: CellRef,
-  baseUnit: number,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): Rect {
-  const cellSize = getLevelCellSize(cell.level, baseUnit, subdivision);
+export function cellToWorldRect(cell: CellRef, a: number): Rect {
+  const cellSize = getLevelCellSize(cell.level, a);
   return {
     x: cell.col * cellSize,
     y: cell.row * cellSize,
@@ -136,23 +130,39 @@ export function cellToWorldRect(
   };
 }
 
-/** Finest-grid cell from world point. */
-export function worldToFinestCell(
-  point: Point,
-  a: number,
-): { col: number; row: number } {
+/** Finest-grid cell from world point (`finest = a/16`). */
+export function worldToFinestCell(point: Point, a: number): { col: number; row: number } {
+  const f = a / FINEST_PER_A;
   return {
-    col: Math.floor(point.x / a),
-    row: Math.floor(point.y / a),
+    col: Math.floor(point.x / f),
+    row: Math.floor(point.y / f),
   };
 }
 
-export function finestCellToWorldRect(
-  col: number,
-  row: number,
-  a: number,
-): Rect {
-  return { x: col * a, y: row * a, width: a, height: a };
+/** Snap world point to placement grid (a/4), return finest origin. */
+export function worldToPlacementFinest(point: Point, a: number): { col: number; row: number } {
+  const place = a / PLACE_PER_A;
+  const pCol = Math.floor(point.x / place);
+  const pRow = Math.floor(point.y / place);
+  return {
+    col: pCol * FINEST_PER_PLACE,
+    row: pRow * FINEST_PER_PLACE,
+  };
+}
+
+export function finestCellToWorldRect(col: number, row: number, a: number): Rect {
+  const f = a / FINEST_PER_A;
+  return { x: col * f, y: row * f, width: f, height: f };
+}
+
+export function catalogToFinestSize(widthCells: number, heightCells: number): {
+  widthCells: number;
+  heightCells: number;
+} {
+  return {
+    widthCells: widthCells * FINEST_PER_PLACE,
+    heightCells: heightCells * FINEST_PER_PLACE,
+  };
 }
 
 export function cellKey(cell: CellRef): string {
@@ -164,13 +174,8 @@ export function isSameCell(a: CellRef | null, b: CellRef | null): boolean {
   return a.level === b.level && a.col === b.col && a.row === b.row;
 }
 
-export function cellsInWorldRect(
-  rect: Rect,
-  level: number,
-  baseUnit: number,
-  subdivision: SubdivisionMode = DEFAULT_SUBDIVISION,
-): CellRef[] {
-  const cellSize = getLevelCellSize(level, baseUnit, subdivision);
+export function cellsInWorldRect(rect: Rect, level: NamedGridLevel, a: number): CellRef[] {
+  const cellSize = levelCellSize(level, a);
   const minCol = Math.max(0, Math.floor(rect.x / cellSize));
   const maxCol = Math.floor((rect.x + rect.width - 1e-9) / cellSize);
   const minRow = Math.max(0, Math.floor(rect.y / cellSize));
@@ -192,7 +197,6 @@ export function worldRectFromPoints(a: Point, b: Point): Rect {
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
 
-/** Floor clip bounds in world units. */
 export function floorWorldRect(floor: FloorConfig): Rect {
   return {
     x: 0,

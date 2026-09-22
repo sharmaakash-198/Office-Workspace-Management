@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
-import type { FloorConfig, SubdivisionMode } from '../types/geometry';
+import type { FloorConfig } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 import {
-  getFloorBaseUnit,
   getGridLevel,
-  getLevelCellSize,
-  getMaxLevel,
+  levelCellSize,
   getVisibleLinePositions,
   getVisibleWorldBounds,
+  type NamedGridLevel,
+  NAMED_LEVELS,
 } from '../geometry/grid';
 
 interface GridProps {
@@ -16,12 +16,28 @@ interface GridProps {
   showGrid: boolean;
   svgWidth: number;
   svgHeight: number;
-  subdivision: SubdivisionMode;
+}
+
+const FULL_PX = 24;
+
+type Tier = {
+  level: NamedGridLevel;
+  v: number[];
+  h: number[];
+  opacity: number;
+  kind: 'coarse' | 'major' | 'minor' | 'fine';
+};
+
+function kindFor(level: NamedGridLevel): Tier['kind'] {
+  if (level <= -1) return 'coarse';
+  if (level === 0) return 'major';
+  if (level === 1) return 'minor';
+  return 'fine';
 }
 
 /**
- * First-quadrant infinite paper grid (x≥0, y≥0). Not clipped to floor —
- * continues into the grayed exterior beyond the designated floor.
+ * Multi-tier grid with fading next-finer lines so cells visibly split
+ * while zooming: 2a → a → a/4 → a/16.
  */
 const Grid: React.FC<GridProps> = ({
   floor,
@@ -29,19 +45,15 @@ const Grid: React.FC<GridProps> = ({
   showGrid,
   svgWidth,
   svgHeight,
-  subdivision,
 }) => {
-  const baseUnit = getFloorBaseUnit(floor, subdivision);
-  const maxLevel = getMaxLevel(subdivision);
+  const a = floor.a;
 
-  const { lines, level, majorSize, minorSize, bounds } = useMemo(() => {
+  const { tiers, bounds, level } = useMemo(() => {
     if (!showGrid) {
       return {
-        lines: { h: [] as number[], v: [] as number[] },
-        level: 0,
-        majorSize: 0,
-        minorSize: 0,
+        tiers: [] as Tier[],
         bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0 },
+        level: 0 as NamedGridLevel,
       };
     }
 
@@ -50,61 +62,78 @@ const Grid: React.FC<GridProps> = ({
     const maxX = Math.max(0, world.maxX);
     const minY = Math.max(0, world.minY);
     const maxY = Math.max(0, world.maxY);
+    const current = getGridLevel(viewport.zoom, a);
 
-    const currentLevel = getGridLevel(viewport.zoom, baseUnit, maxLevel, subdivision);
-    const minor = getLevelCellSize(currentLevel, baseUnit, subdivision);
-    const major = baseUnit;
+    const tiers: Tier[] = [];
+    for (const lvl of NAMED_LEVELS) {
+      if (lvl > current + 1) break;
+      const px = levelCellSize(lvl, a) * viewport.zoom;
+      let opacity = 1;
+      if (lvl > current) {
+        // Next-finer: fade in early so subdivisions are visible before "snapping"
+        opacity = Math.min(1, Math.max(0.28, px / FULL_PX));
+      } else if (lvl === current) {
+        opacity = 1;
+      } else {
+        opacity = 1;
+      }
+      if (opacity < 0.05) continue;
+      const size = levelCellSize(lvl, a);
+      tiers.push({
+        level: lvl,
+        v: getVisibleLinePositions(minX, maxX, size),
+        h: getVisibleLinePositions(minY, maxY, size),
+        opacity,
+        kind: kindFor(lvl),
+      });
+    }
 
     return {
-      lines: {
-        v: getVisibleLinePositions(minX, maxX, minor),
-        h: getVisibleLinePositions(minY, maxY, minor),
-      },
-      level: currentLevel,
-      majorSize: major,
-      minorSize: minor,
+      tiers,
       bounds: { minX, maxX, minY, maxY },
+      level: current,
     };
-  }, [viewport, showGrid, svgWidth, svgHeight, baseUnit, maxLevel, subdivision]);
+  }, [viewport, showGrid, svgWidth, svgHeight, a]);
 
   if (!showGrid) return null;
 
-  const isMajorLine = (pos: number) => {
-    if (majorSize <= 0) return false;
-    const rem = ((pos % majorSize) + majorSize) % majorSize;
-    return rem < 1e-6 || Math.abs(rem - majorSize) < 1e-6;
-  };
-
-  const pad = Math.max(minorSize * 2, 1);
+  const pad = Math.max(levelCellSize(level, a) * 2, 1);
   const y1 = Math.max(0, bounds.minY - pad);
   const y2 = bounds.maxY + pad;
   const x1 = Math.max(0, bounds.minX - pad);
   const x2 = bounds.maxX + pad;
 
   return (
-    <g id="grid" data-level={level} data-cell-size={minorSize}>
-      {lines.v.map((x) => (
-        <line
-          key={`v-${x}`}
-          x1={x}
-          y1={y1}
-          x2={x}
-          y2={y2}
-          className={isMajorLine(x) ? 'grid-line major' : 'grid-line minor'}
-          vectorEffect="non-scaling-stroke"
-        />
-      ))}
-
-      {lines.h.map((y) => (
-        <line
-          key={`h-${y}`}
-          x1={x1}
-          y1={y}
-          x2={x2}
-          y2={y}
-          className={isMajorLine(y) ? 'grid-line major' : 'grid-line minor'}
-          vectorEffect="non-scaling-stroke"
-        />
+    <g id="grid" data-level={level}>
+      {tiers.map((tier) => (
+        <g
+          key={`tier-${tier.level}`}
+          opacity={tier.opacity}
+          style={{ transition: 'opacity 120ms linear' }}
+        >
+          {tier.v.map((x) => (
+            <line
+              key={`v-${tier.level}-${x}`}
+              x1={x}
+              y1={y1}
+              x2={x}
+              y2={y2}
+              className={`grid-line ${tier.kind}`}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          {tier.h.map((y) => (
+            <line
+              key={`h-${tier.level}-${y}`}
+              x1={x1}
+              y1={y}
+              x2={x2}
+              y2={y}
+              className={`grid-line ${tier.kind}`}
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </g>
       ))}
 
       <circle cx={0} cy={0} r={3 / viewport.zoom} className="grid-origin" opacity={0.8} />

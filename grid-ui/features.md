@@ -1,30 +1,23 @@
-# Floor Planner - Features
+# Floor Planner — Features
 
-## Canvas & navigation
+## Grid
+- Fixed levels: 2a (zoom-out), a (default), a/4 (placement), a/16 (finest storage)
+- First-quadrant paper; grayed non-floor area; (0,0) bottom-left with gutter
+- Units of arbitrary `a` only (no meters/feet)
+- Zoom nav bars (bottom + right) when zoomed in
 
-- **First-quadrant paper** - Cannot pan into negative X/Y; origin at bottom-left on Fit.
-- **Infinite up/right** - Grid continues beyond the floor; exterior is grayed and not placeable.
-- **Arbitrary unit `a`** - Finest cell size; no meters/feet in the UI.
-- **Zoom split 2x or 4x** - Toolbar toggle for cell subdivision depth.
-- **Pan / wheel / pinch / Fit / Snap / Grid** - Standard viewport tools.
+## Library & entities
+- Category accordion + SVG previews from catalog JSON
+- Catalog sizes in a/4 cells; placed as a/16 finest cells
+- Fixed footprint (no scale up/down); rotate 0/90/180/270 CCW
+- Labels non-selectable on canvas; Space works in property inputs
 
-## Library
+## Zones & unusable
+- Ctrl+drag selects cells over furniture
+- Named zones with light tints; placeholder labels
+- Labeled unusable regions (e.g. pillar); blocks placement/move
 
-- **Category accordions** - Exclusive open; SVG previews from `public/assets`.
-- **Catalog JSON** - `public/library-catalog.json` configures types and sizes.
-- **Custom polygons** - Save under Custom or a new category; deletable from library.
-- **Mark unusable** - Select cells, then mark unusable to map irregular floors.
-
-## Editing
-
-- **Cell occupancy on planner** - Pretty view draws SVGs.
-- **Entity menu** - Copy, Scale up/down, Rotate (0/90/180/270 CCW), Delete.
-- **Toolbar Delete** - Removes selection.
-- **Zones** - Named tinted regions; copy zone entities.
-- **In-app prompts** - No browser alert/prompt for labels and messages.
-
-## JSON & pretty view
-
-- **FloorDocument v2** - Includes rotation and unusableCells.
-- **Pretty view** - Catalog SVGs + polygon boundaries; editor state preserved on Back.
-- **Drafts / download / load JSON**.
+## Preview & JSON
+- Preview route with sticky bar and cols×rows size
+- FloorDocument JSON export/import (no occupancy matrix)
+- Drafts in localStorage

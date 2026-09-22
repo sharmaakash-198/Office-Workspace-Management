@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Viewport } from '../types/viewport';
-import type { EditorTool, SubdivisionMode } from '../types/geometry';
+import type { EditorTool } from '../types/geometry';
 import { listDrafts } from '../lib/drafts';
 
 interface ToolbarProps {
@@ -10,7 +10,6 @@ interface ToolbarProps {
   snapEnabled: boolean;
   includeGridOnExport: boolean;
   theme: 'dark' | 'light';
-  subdivision: SubdivisionMode;
   canUndo: boolean;
   canRedo: boolean;
   canPaste: boolean;
@@ -23,7 +22,6 @@ interface ToolbarProps {
   onToggleSnap: () => void;
   onToggleExportGrid: () => void;
   onToggleTheme: () => void;
-  onSubdivisionChange: (mode: SubdivisionMode) => void;
   onUndo: () => void;
   onRedo: () => void;
   onCopy: () => void;
@@ -35,7 +33,7 @@ interface ToolbarProps {
   onExportPng: () => void;
   onExportSvg: () => void;
   onExportPdf: () => void;
-  onOpenPretty: () => void;
+  onOpenPreview: () => void;
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({
@@ -45,7 +43,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   snapEnabled,
   includeGridOnExport,
   theme,
-  subdivision,
   canUndo,
   canRedo,
   canPaste,
@@ -58,7 +55,6 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onToggleSnap,
   onToggleExportGrid,
   onToggleTheme,
-  onSubdivisionChange,
   onUndo,
   onRedo,
   onCopy,
@@ -70,7 +66,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onExportPng,
   onExportSvg,
   onExportPdf,
-  onOpenPretty,
+  onOpenPreview,
 }) => {
   const [draftOpen, setDraftOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -184,21 +180,13 @@ const Toolbar: React.FC<ToolbarProps> = ({
         >
           Snap
         </button>
-        <button
-          type="button"
-          className={`toolbar-btn toggle-btn ${subdivision === 2 ? 'active' : ''}`}
-          onClick={() => onSubdivisionChange(subdivision === 2 ? 4 : 2)}
-          title="Toggle 2x / 4x cell split"
-        >
-          Split {subdivision}x
-        </button>
       </div>
 
       <div className="toolbar-spacer" />
 
       <div className="toolbar-group toolbar-menus">
-        <button type="button" className="toolbar-btn" onClick={onOpenPretty}>
-          Pretty view
+        <button type="button" className="toolbar-btn" onClick={onOpenPreview}>
+          Preview
         </button>
         <button type="button" className="toolbar-btn" onClick={onHowToUse}>
           How to use

@@ -17,7 +17,7 @@ import type {
   LibraryItem,
   Point,
   Rect,
-  SubdivisionMode,
+  UnusableRegion,
 } from '../types/geometry';
 import { floorWorldHeight, floorWorldWidth } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
@@ -33,30 +33,31 @@ import {
   zoomAround,
 } from '../geometry/coordinates';
 import {
+  catalogToFinestSize,
   cellToWorldRect,
   cellsInWorldRect,
-  getFloorBaseUnit,
+  FINEST_PER_A,
+  FINEST_PER_PLACE,
+  floorFinestCols,
+  floorFinestRows,
   getGridLevel,
-  getLevelCellSize,
-  getMaxLevel,
   getVisibleWorldBounds,
+  levelCellSize,
   worldRectFromPoints,
   worldToCell,
   worldToFinestCell,
+  worldToPlacementFinest,
 } from '../geometry/grid';
 import { snapPointToGrid, snapToGrid } from '../geometry/snapping';
 import {
   cloneEntity,
   createId,
   entitiesInCells,
-  entitiesIntersectingRect,
   entityWorldRect,
   hitTestEntity,
   isPolygonEntity,
   resizePolygonEntity,
   rotateEntity90CCW,
-  scaleEntityDown,
-  scaleEntityUp,
   translateEntity,
 } from '../geometry/entities';
 import {
@@ -68,6 +69,7 @@ import {
   downloadFloorJson,
   floorDocumentToJson,
   loadDraft,
+  normalizeUnusableRegions,
   saveDraft,
   type FloorDocument,
 } from '../lib/drafts';
@@ -86,6 +88,7 @@ import EntitiesLayer from './EntitiesLayer';
 import ZonesLayer from './ZonesLayer';
 import OutsideFloorOverlay from './OutsideFloorOverlay';
 import UnusableLayer from './UnusableLayer';
+import GridNavBars from './GridNavBars';
 import SelectionMarquee from './SelectionMarquee';
 import SelectionActionMenu from './SelectionActionMenu';
 import EntityActionMenu from './EntityActionMenu';
@@ -102,8 +105,8 @@ const MAX_ZOOM = 400;
 const CLICK_PX = 4;
 
 const DEFAULT_FLOOR: FloorConfig = {
-  cols: 64,
-  rows: 64,
+  cols: 128,
+  rows: 128,
   a: 0.25,
 };
 
@@ -158,13 +161,8 @@ function mergeCells(existing: CellRef[], extra: CellRef[], additive: boolean): C
   return Array.from(map.values());
 }
 
-function selectedCellsToFinest(
-  cells: CellRef[],
-  baseUnit: number,
-  a: number,
-  subdivision: SubdivisionMode,
-): GridCell[] {
-  const built = cellsToRelativeFinest(cells, baseUnit, a, subdivision);
+function selectedCellsToFinest(cells: CellRef[], a: number): GridCell[] {
+  const built = cellsToRelativeFinest(cells, a);
   if (!built) return [];
   return built.cells.map((c) => ({
     col: built.origin.col + c.col,
@@ -175,17 +173,17 @@ function selectedCellsToFinest(
 
 function askText(
   setPromptReq: React.Dispatch<React.SetStateAction<PromptRequest | null>>,
-  setPromptResolve: React.Dispatch<React.SetStateAction<((v: string | null) => void) | null>>,
+  resolveRef: React.MutableRefObject<((v: string | null) => void) | null>,
   req: PromptRequest,
 ): Promise<string | null> {
   return new Promise((resolve) => {
+    resolveRef.current = resolve;
     setPromptReq(req);
-    setPromptResolve(() => resolve);
   });
 }
 
 interface FloorEditorProps {
-  onOpenPretty: (doc: FloorDocument) => void;
+  onOpenPretty: (doc: FloorDocument) => void; // Preview
 }
 
 const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
@@ -195,7 +193,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
   const [svgSize, setSvgSize] = useState({ width: 800, height: 600 });
   const [viewport, setViewport] = useState<Viewport>({ zoom: 40, panX: 0, panY: 0 });
   const [floor, setFloor] = useState<FloorConfig>(DEFAULT_FLOOR);
-  const [subdivision, setSubdivision] = useState<SubdivisionMode>(4);
   const [showGrid, setShowGrid] = useState(true);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [includeGridOnExport, setIncludeGridOnExport] = useState(true);
@@ -209,9 +206,9 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [customLibrary, setCustomLibrary] = useState<CustomLibraryEntry[]>([]);
   const [zones, setZones] = useState<FloorZone[]>([]);
-  const [unusableCells, setUnusableCells] = useState<GridCell[]>([]);
+  const [unusableRegions, setUnusableRegions] = useState<UnusableRegion[]>([]);
   const [promptReq, setPromptReq] = useState<PromptRequest | null>(null);
-  const [promptResolve, setPromptResolve] = useState<((v: string | null) => void) | null>(null);
+  const promptResolveRef = useRef<((v: string | null) => void) | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [howToOpen, setHowToOpen] = useState(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
@@ -243,7 +240,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
   const viewportRef = useRef(viewport);
   const entitiesRef = useRef(entities);
   const floorRef = useRef(floor);
-  const subdivisionRef = useRef(subdivision);
   const dragRef = useRef<DragMode>(null);
   const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
   const movedRef = useRef(false);
@@ -257,9 +253,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
   useEffect(() => {
     floorRef.current = floor;
   }, [floor]);
-  useEffect(() => {
-    subdivisionRef.current = subdivision;
-  }, [subdivision]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -289,13 +282,13 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     return () => ro.disconnect();
   }, []);
 
-  const baseUnit = getFloorBaseUnit(floor, subdivision);
-  const maxLevel = getMaxLevel(subdivision);
-  const gridLevel = getGridLevel(viewport.zoom, baseUnit, maxLevel, subdivision);
-  const gridCellSize = getLevelCellSize(gridLevel, baseUnit, subdivision);
-  const snapSizeWorld = snapEnabled ? gridCellSize : 0;
-  const minZoom = minZoomToFitFloor(floor, svgSize.width, svgSize.height);
   const a = floor.a;
+  const gridLevel = getGridLevel(viewport.zoom, a);
+  const gridCellSize = levelCellSize(gridLevel, a);
+  const placementSize = levelCellSize(1, a);
+  const finestSize = a / FINEST_PER_A;
+  const snapSizeWorld = snapEnabled ? placementSize : 0;
+  const minZoom = minZoomToFitFloor(floor, svgSize.width, svgSize.height);
 
   const allLibrary = useMemo(
     () => [...catalogToLibraryItems({ categories }), ...customLibrary],
@@ -309,10 +302,10 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
   );
 
   const hoveredCell: CellRef | null = useMemo(() => {
-    const cell = worldToCell(cursorWorld, gridLevel, baseUnit, subdivision);
+    const cell = worldToCell(cursorWorld, gridLevel, a);
     if (cell.col < 0 || cell.row < 0) return null;
     return cell;
-  }, [cursorWorld, gridLevel, baseUnit, subdivision]);
+  }, [cursorWorld, gridLevel, a]);
 
   const selectionMenuPos = useMemo(() => {
     if (selectedCells.length === 0) return null;
@@ -321,7 +314,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     let minY = Infinity;
     let maxY = -Infinity;
     for (const cell of selectedCells) {
-      const r = cellToWorldRect(cell, baseUnit, subdivision);
+      const r = cellToWorldRect(cell, a);
       minX = Math.min(minX, r.x);
       maxX = Math.max(maxX, r.x + r.width);
       minY = Math.min(minY, r.y);
@@ -329,7 +322,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     }
     const screen = worldToScreen({ x: (minX + maxX) / 2, y: maxY }, viewport);
     return { x: screen.x, y: screen.y };
-  }, [selectedCells, baseUnit, subdivision, viewport]);
+  }, [selectedCells, a, viewport]);
 
   const entityMenuPos = useMemo(() => {
     if (!showEntityMenu || selectedEntities.length !== 1) return null;
@@ -343,21 +336,20 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     return {
       version: 2,
       a: floor.a,
-      subdivision,
       floor,
       entities,
       zones,
       customLibrary,
-      unusableCells,
+      unusableRegions,
       viewport,
       theme,
     };
-  }, [floor, subdivision, entities, zones, customLibrary, unusableCells, viewport, theme]);
+  }, [floor, entities, zones, customLibrary, unusableRegions, viewport, theme]);
 
   const showToast = useCallback((msg: string) => setToastMsg(msg), []);
 
   const requestPrompt = useCallback((req: PromptRequest) => {
-    return askText(setPromptReq, setPromptResolve, req);
+    return askText(setPromptReq, promptResolveRef, req);
   }, []);
 
   const setClampedViewport = useCallback(
@@ -370,17 +362,27 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     [svgSize.width, svgSize.height],
   );
 
-  const unusableSet = useMemo(
-    () => new Set(unusableCells.map((c) => `${c.col},${c.row}`)),
-    [unusableCells],
-  );
+  const unusableSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of unusableRegions) {
+      for (const c of r.cells) s.add(`${c.col},${c.row}`);
+    }
+    return s;
+  }, [unusableRegions]);
 
   const cellBlocked = useCallback(
     (col: number, row: number) => {
-      if (col < 0 || row < 0 || col >= floor.cols || row >= floor.rows) return true;
+      if (
+        col < 0 ||
+        row < 0 ||
+        col >= floorFinestCols(floor) ||
+        row >= floorFinestRows(floor)
+      ) {
+        return true;
+      }
       return unusableSet.has(`${col},${row}`);
     },
-    [floor.cols, floor.rows, unusableSet],
+    [floor, unusableSet],
   );
 
   const entityFitsFloor = useCallback(
@@ -482,10 +484,10 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
 
   const placeEntityAt = useCallback(
     async (item: LibraryItem, world: Point) => {
-      let cell = worldToFinestCell(world, a);
+      let cell = worldToPlacementFinest(world, a);
       if (snapSizeWorld > 0) {
         const snapped = snapPointToGrid(world.x, world.y, snapSizeWorld);
-        cell = worldToFinestCell(snapped, a);
+        cell = worldToPlacementFinest(snapped, a);
       }
       cell = { col: Math.max(0, cell.col), row: Math.max(0, cell.row) };
 
@@ -503,27 +505,30 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       };
 
       if (item.category === 'text') {
-        const text = await requestPrompt({
+        const textVal = await requestPrompt({
           title: 'Label text',
           defaultValue: item.label === 'Text block' ? 'Label' : item.label,
           confirmLabel: 'Place',
         });
-        if (!text?.trim()) {
+        if (!textVal?.trim()) {
           setPlaceItem(null);
           setTool('select');
           return;
         }
         const fontSize = item.defaultFontSize ?? 0.6;
+        const dims = catalogToFinestSize(
+          Math.max(item.widthCells, Math.ceil(textVal.length * 0.4)),
+          item.heightCells,
+        );
         finishPlace({
           objectId: createId('text'),
           category: 'text',
           elementType: 'text',
           origin: cell,
-          widthCells: Math.max(item.widthCells, Math.ceil(text.length * 0.4)),
-          heightCells: item.heightCells,
-          scaleLevel: 0,
+          widthCells: dims.widthCells,
+          heightCells: dims.heightCells,
           rotation: 0,
-          label: text.trim(),
+          label: textVal.trim(),
           color: item.color,
           fontSize,
         });
@@ -538,7 +543,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
           origin: cell,
           widthCells: item.widthCells,
           heightCells: item.heightCells,
-          scaleLevel: 0,
           rotation: 0,
           cells: item.cells.map((c) => ({ ...c })),
           svgPath: item.svgPath ?? cellsToSvgPath(item.cells),
@@ -548,14 +552,14 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         return;
       }
 
+      const dims = catalogToFinestSize(item.widthCells, item.heightCells);
       finishPlace({
         objectId: createId(item.elementType),
         category: item.category,
         elementType: item.elementType,
         origin: cell,
-        widthCells: item.widthCells,
-        heightCells: item.heightCells,
-        scaleLevel: 0,
+        widthCells: dims.widthCells,
+        heightCells: dims.heightCells,
         rotation: 0,
         svg: item.svg,
         label: item.label,
@@ -567,10 +571,10 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
 
   const handleMarkAsPolygon = useCallback(() => {
     if (selectedCells.length === 0) return;
-    const built = cellsToRelativeFinest(selectedCells, baseUnit, a, subdivision);
+    const built = cellsToRelativeFinest(selectedCells, a);
     if (!built) return;
     setPolygonPending(built);
-  }, [selectedCells, baseUnit, a, subdivision]);
+  }, [selectedCells, a]);
 
   const confirmPolygonSave = useCallback(
     (opts: { label: string; category: string }) => {
@@ -587,7 +591,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         origin: polygonPending.origin,
         widthCells: polygonPending.widthCells,
         heightCells: polygonPending.heightCells,
-        scaleLevel: 0,
         cells: polygonPending.cells,
         svgPath,
         label: opts.label,
@@ -632,7 +635,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     let anchorCol = 0;
     let anchorRow = 0;
     if (selectedCells.length > 0) {
-      const finest = selectedCellsToFinest(selectedCells, baseUnit, a, subdivision);
+      const finest = selectedCellsToFinest(selectedCells, a);
       if (finest.length > 0) {
         anchorCol = Math.min(...finest.map((c) => c.col));
         anchorRow = Math.min(...finest.map((c) => c.row));
@@ -659,28 +662,28 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     setSelectedIds(pasted.map((p) => p.objectId));
     setSelectedCells([]);
     setShowEntityMenu(false);
-  }, [clipboard, selectedCells, baseUnit, a, subdivision, cursorWorld, setEntities]);
+  }, [clipboard, selectedCells, a, cursorWorld, setEntities]);
 
   const handleCopyZone = useCallback(() => {
     if (selectedCells.length === 0) return;
-    const finest = selectedCellsToFinest(selectedCells, baseUnit, a, subdivision);
+    const finest = selectedCellsToFinest(selectedCells, a);
     const hit = entitiesInCells(entitiesRef.current, finest, a);
     if (hit.length === 0) {
       showToast('No entities in the selected zone.');
       return;
     }
     setClipboard(hit.map((e) => cloneEntity(e, e.objectId)));
-  }, [selectedCells, baseUnit, a, subdivision, showToast]);
+  }, [selectedCells, a, showToast]);
 
   const handleMarkZone = useCallback(async () => {
     if (selectedCells.length === 0) return;
     const label = await requestPrompt({
       title: 'Zone label',
-      defaultValue: 'team-1',
+      placeholder: 'team-1',
       confirmLabel: 'Mark zone',
     });
     if (!label?.trim()) return;
-    const finest = selectedCellsToFinest(selectedCells, baseUnit, a, subdivision);
+    const finest = selectedCellsToFinest(selectedCells, a);
     const zone: FloorZone = {
       id: createId('zone'),
       label: label.trim(),
@@ -689,33 +692,73 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     };
     setZones((prev) => [...prev, zone]);
     setSelectedCells([]);
-  }, [selectedCells, baseUnit, a, subdivision, zones.length, requestPrompt]);
+  }, [selectedCells, a, zones.length, requestPrompt]);
 
-  const handleMarkUnusable = useCallback(() => {
+  const handleMarkUnusable = useCallback(async () => {
     if (selectedCells.length === 0) return;
-    const finest = selectedCellsToFinest(selectedCells, baseUnit, a, subdivision);
-    setUnusableCells((prev) => {
-      const map = new Map(prev.map((c) => [`${c.col},${c.row}`, c]));
-      for (const c of finest) {
-        if (c.col >= 0 && c.row >= 0 && c.col < floor.cols && c.row < floor.rows) {
-          map.set(`${c.col},${c.row}`, c);
-        }
-      }
-      return Array.from(map.values());
+    const finest = selectedCellsToFinest(selectedCells, a).filter(
+      (c) =>
+        c.col >= 0 &&
+        c.row >= 0 &&
+        c.col < floorFinestCols(floor) &&
+        c.row < floorFinestRows(floor),
+    );
+    if (finest.length === 0) return;
+    const label = await requestPrompt({
+      title: 'Unusable label',
+      placeholder: 'pillar',
+      confirmLabel: 'Mark',
     });
+    const region: UnusableRegion = {
+      id: createId('unusable'),
+      label: (label ?? '').trim(),
+      cells: finest,
+    };
+    setUnusableRegions((prev) => [...prev, region]);
     setSelectedCells([]);
-  }, [selectedCells, baseUnit, a, subdivision, floor.cols, floor.rows]);
+  }, [selectedCells, a, floor, requestPrompt]);
+
+  const handleLabelUnusable = useCallback(async () => {
+    if (selectedCells.length === 0) return;
+    const finest = selectedCellsToFinest(selectedCells, a);
+    const keys = new Set(finest.map((c) => `${c.col},${c.row}`));
+    const hit = unusableRegions.filter((r) =>
+      r.cells.some((c) => keys.has(`${c.col},${c.row}`)),
+    );
+    if (hit.length === 0) {
+      showToast('No unusable cells in the selection.');
+      return;
+    }
+    const label = await requestPrompt({
+      title: 'Unusable label',
+      placeholder: 'pillar',
+      defaultValue: hit[0].label,
+      confirmLabel: 'Save',
+    });
+    if (label === null) return;
+    const ids = new Set(hit.map((r) => r.id));
+    setUnusableRegions((prev) =>
+      prev.map((r) => (ids.has(r.id) ? { ...r, label: label.trim() } : r)),
+    );
+  }, [selectedCells, a, unusableRegions, requestPrompt, showToast]);
 
   const handleClearUnusable = useCallback(() => {
     if (selectedCells.length === 0) {
-      setUnusableCells([]);
+      setUnusableRegions([]);
       return;
     }
-    const finest = selectedCellsToFinest(selectedCells, baseUnit, a, subdivision);
+    const finest = selectedCellsToFinest(selectedCells, a);
     const drop = new Set(finest.map((c) => `${c.col},${c.row}`));
-    setUnusableCells((prev) => prev.filter((c) => !drop.has(`${c.col},${c.row}`)));
+    setUnusableRegions((prev) =>
+      prev
+        .map((r) => ({
+          ...r,
+          cells: r.cells.filter((c) => !drop.has(`${c.col},${c.row}`)),
+        }))
+        .filter((r) => r.cells.length > 0),
+    );
     setSelectedCells([]);
-  }, [selectedCells, baseUnit, a, subdivision]);
+  }, [selectedCells, a]);
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedIdsRef.current.length === 0) return;
@@ -724,32 +767,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     setSelectedIds([]);
     setShowEntityMenu(false);
   }, [setEntities]);
-
-  const handleScaleUp = useCallback(() => {
-    if (selectedEntities.length !== 1) return;
-    const e = selectedEntities[0];
-    if (isPolygonEntity(e)) return;
-    const next = scaleEntityUp(e, subdivision);
-    if (!next) return;
-    if (!entityFitsFloor(next)) {
-      showToast('Scaled entity would leave the floor or hit unusable cells.');
-      return;
-    }
-    setEntities(
-      entitiesRef.current.map((ent) => (ent.objectId === e.objectId ? next : ent)),
-    );
-  }, [selectedEntities, subdivision, setEntities, entityFitsFloor, showToast]);
-
-  const handleScaleDown = useCallback(() => {
-    if (selectedEntities.length !== 1) return;
-    const e = selectedEntities[0];
-    if (isPolygonEntity(e)) return;
-    const next = scaleEntityDown(e, subdivision);
-    if (!next) return;
-    setEntities(
-      entitiesRef.current.map((ent) => (ent.objectId === e.objectId ? next : ent)),
-    );
-  }, [selectedEntities, subdivision, setEntities]);
 
   const handleRotate = useCallback(() => {
     if (selectedEntities.length !== 1) return;
@@ -777,8 +794,10 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       const typing = tag === 'INPUT' || tag === 'TEXTAREA';
 
       if (e.code === 'Space' && !e.repeat) {
-        e.preventDefault();
-        setSpaceHeld(true);
+        if (!typing) {
+          e.preventDefault();
+          setSpaceHeld(true);
+        }
       }
       if (e.key === 'Escape') {
         setSelectedIds([]);
@@ -827,7 +846,8 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
           e.key === 'ArrowRight')
       ) {
         e.preventDefault();
-        const stepCells = snapSizeWorld > 0 ? Math.max(1, Math.round(snapSizeWorld / a)) : 1;
+        const stepCells =
+          snapSizeWorld > 0 ? Math.max(1, Math.round(snapSizeWorld / finestSize)) : FINEST_PER_PLACE;
         const large = e.shiftKey ? 4 : 1;
         const delta = stepCells * large;
         let dCol = 0;
@@ -854,7 +874,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [setEntities, handleCopy, handlePaste, snapSizeWorld, a]);
+  }, [setEntities, handleCopy, handlePaste, snapSizeWorld, finestSize]);
 
   const applyPolygonResize = (
     origin: Entity,
@@ -872,23 +892,23 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       nx = snapToGrid(nx, snap);
       ny = snapToGrid(ny, snap);
     }
-    if (handle.includes('e')) width = Math.max(a, nx - x);
+    if (handle.includes('e')) width = Math.max(finestSize, nx - x);
     if (handle.includes('w')) {
-      const newX = Math.min(nx, right - a);
+      const newX = Math.min(nx, right - finestSize);
       width = right - newX;
       x = newX;
     }
-    if (handle.includes('n')) height = Math.max(a, ny - y);
+    if (handle.includes('n')) height = Math.max(finestSize, ny - y);
     if (handle.includes('s')) {
-      const newY = Math.min(ny, top - a);
+      const newY = Math.min(ny, top - finestSize);
       height = top - newY;
       y = newY;
     }
-    const widthCells = Math.max(1, Math.round(width / a));
-    const heightCells = Math.max(1, Math.round(height / a));
+    const widthCells = Math.max(1, Math.round(width / finestSize));
+    const heightCells = Math.max(1, Math.round(height / finestSize));
     const originCell = {
-      col: Math.max(0, Math.round(x / a)),
-      row: Math.max(0, Math.round(y / a)),
+      col: Math.max(0, Math.round(x / finestSize)),
+      row: Math.max(0, Math.round(y / finestSize)),
     };
     return resizePolygonEntity(origin, { origin: originCell, widthCells, heightCells });
   };
@@ -1011,14 +1031,14 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         dx = snapToGrid(dx, snapSizeWorld);
         dy = snapToGrid(dy, snapSizeWorld);
       }
-      const dCol = Math.round(dx / a);
-      const dRow = Math.round(dy / a);
+      const dCol = Math.round(dx / finestSize);
+      const dRow = Math.round(dy / finestSize);
       const idSet = new Set(drag.ids);
-      replaceEntities(
-        drag.originEntities.map((ent) =>
-          idSet.has(ent.objectId) ? translateEntity(ent, dCol, dRow) : ent,
-        ),
+      const moved = drag.originEntities.map((ent) =>
+        idSet.has(ent.objectId) ? translateEntity(ent, dCol, dRow) : ent,
       );
+      // Preview move; validity checked on mouse-up
+      replaceEntities(moved);
       return;
     }
 
@@ -1038,7 +1058,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
 
     if (drag?.type === 'pan') {
       if (!movedRef.current) {
-        const cell = worldToCell(drag.worldAtStart, gridLevel, baseUnit, subdivision);
+        const cell = worldToCell(drag.worldAtStart, gridLevel, a);
         if (cell.col >= 0 && cell.row >= 0) {
           if (!drag.shift) setSelectedIds([]);
           setSelectedCells((prev) => mergeCells(prev, [cell], drag.shift));
@@ -1054,26 +1074,32 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       if (rect.width * viewport.zoom < CLICK_PX && rect.height * viewport.zoom < CLICK_PX) {
         return;
       }
-      const hit = entitiesIntersectingRect(entitiesRef.current, rect, a);
-      if (hit.length > 0) {
-        const ids = hit.map((h) => h.objectId);
-        setSelectedIds((prev) =>
-          drag.additive ? Array.from(new Set([...prev, ...ids])) : ids,
-        );
-        setSelectedCells([]);
-        setShowEntityMenu(ids.length === 1);
+      // Ctrl+drag always selects cells (zones / unusable / polygons over entities).
+      const cells = cellsInWorldRect(rect, gridLevel, a).filter(
+        (c) => c.col >= 0 && c.row >= 0,
+      );
+      setSelectedCells((prev) => mergeCells(prev, cells, drag.additive));
+      if (!drag.additive) setSelectedIds([]);
+      setShowEntityMenu(false);
+      return;
+    }
+
+    if (drag?.type === 'move' && movedRef.current) {
+      const nextEntities = entitiesRef.current;
+      const idSet = new Set(drag.ids);
+      const ok = nextEntities
+        .filter((e) => idSet.has(e.objectId))
+        .every((e) => entityFitsFloor(e));
+      if (!ok) {
+        replaceEntities(drag.originEntities);
+        showToast('Cannot move onto unusable cells or outside the floor.');
       } else {
-        const cells = cellsInWorldRect(rect, gridLevel, baseUnit, subdivision).filter(
-          (c) => c.col >= 0 && c.row >= 0,
-        );
-        setSelectedCells((prev) => mergeCells(prev, cells, drag.additive));
-        if (!drag.additive) setSelectedIds([]);
-        setShowEntityMenu(false);
+        commitDrag(drag.originEntities);
       }
       return;
     }
 
-    if ((drag?.type === 'move' || drag?.type === 'resize') && movedRef.current) {
+    if (drag?.type === 'resize' && movedRef.current) {
       commitDrag(drag.originEntities);
     }
   };
@@ -1090,12 +1116,11 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
 
   const applyDocument = (doc: FloorDocument) => {
     setFloor(doc.floor);
-    setSubdivision(doc.subdivision);
     if (doc.viewport) setClampedViewport(doc.viewport);
     resetEntities(doc.entities);
     setZones(doc.zones ?? []);
     setCustomLibrary(doc.customLibrary ?? []);
-    setUnusableCells(doc.unusableCells ?? []);
+    setUnusableRegions(normalizeUnusableRegions(doc));
     setSelectedIds([]);
     setSelectedCells([]);
     if (doc.theme) setTheme(doc.theme);
@@ -1141,7 +1166,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     // If labels would be denser than ~36px, thin to every 2nd/4th tick.
     const minLabelPx = 36;
     let step = gridCellSize;
-    while (step * viewport.zoom < minLabelPx && step < baseUnit * 4) {
+    while (step * viewport.zoom < minLabelPx && step < a * 4) {
       step *= 2;
     }
     const xs: number[] = [];
@@ -1154,27 +1179,22 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
     if (bounds.minX <= 0 && bounds.maxX >= 0 && !xs.includes(0)) xs.unshift(0);
     if (bounds.minY <= 0 && bounds.maxY >= 0 && !ys.includes(0)) ys.unshift(0);
     return { xs: xs.slice(0, 60), ys: ys.slice(0, 60) };
-  }, [viewport, svgSize, gridCellSize, baseUnit, floor]);
+  }, [viewport, svgSize, gridCellSize, a, floor]);
 
   const cursorStyle =
     tool === 'pan' || spaceHeld ? 'grab' : placeItem ? 'crosshair' : 'default';
 
   const singleSelected = selectedEntities.length === 1 ? selectedEntities[0] : null;
-  const canScaleUp = Boolean(
-    singleSelected && !isPolygonEntity(singleSelected) && singleSelected.category !== 'text',
-  );
-  const canScaleDown = Boolean(
-    singleSelected &&
-      !isPolygonEntity(singleSelected) &&
-      singleSelected.category !== 'text' &&
-      singleSelected.scaleLevel > 0 &&
-      singleSelected.widthCells % subdivision === 0 &&
-      singleSelected.heightCells % subdivision === 0,
-  );
 
   const colorFor = (entity: Entity) => colorForEntity(entity, allLibrary);
 
   const cursorCell = worldToFinestCell(cursorWorld, a);
+
+  const selectionHasUnusable = useMemo(() => {
+    if (selectedCells.length === 0) return false;
+    const finest = selectedCellsToFinest(selectedCells, a);
+    return finest.some((c) => unusableSet.has(`${c.col},${c.row}`));
+  }, [selectedCells, a, unusableSet]);
 
   return (
     <div className="editor-layout">
@@ -1185,7 +1205,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         snapEnabled={snapEnabled}
         includeGridOnExport={includeGridOnExport}
         theme={theme}
-        subdivision={subdivision}
         canUndo={canUndo}
         canRedo={canRedo}
         canPaste={clipboard.length > 0}
@@ -1201,7 +1220,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         onToggleSnap={() => setSnapEnabled((s) => !s)}
         onToggleExportGrid={() => setIncludeGridOnExport((g) => !g)}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-        onSubdivisionChange={setSubdivision}
         onUndo={undo}
         onRedo={redo}
         onCopy={handleCopy}
@@ -1213,7 +1231,7 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
         onExportPng={() => void runExport('png')}
         onExportSvg={() => void runExport('svg')}
         onExportPdf={() => void runExport('pdf')}
-        onOpenPretty={() => onOpenPretty(buildDocument())}
+        onOpenPreview={() => onOpenPretty(buildDocument())}
       />
 
       <div className="editor-body">
@@ -1272,7 +1290,6 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
                 showGrid={showGrid}
                 svgWidth={svgSize.width}
                 svgHeight={svgSize.height}
-                subdivision={subdivision}
               />
               <OutsideFloorOverlay
                 floor={floor}
@@ -1280,13 +1297,12 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
                 svgWidth={svgSize.width}
                 svgHeight={svgSize.height}
               />
-              <UnusableLayer cells={unusableCells} a={a} />
+              <UnusableLayer regions={unusableRegions} a={a} />
               <ZonesLayer zones={zones} a={a} />
               <CellHighlight
                 hoveredCell={hoveredCell}
                 selectedCells={selectedCells}
-                baseUnit={baseUnit}
-                subdivision={subdivision}
+                a={a}
               />
               <EntitiesLayer
                 entities={entities}
@@ -1342,11 +1358,13 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
               y={selectionMenuPos.y}
               cellCount={selectedCells.length}
               canPaste={clipboard.length > 0}
+              hasUnusableInSelection={selectionHasUnusable}
               onMarkPolygon={handleMarkAsPolygon}
               onPaste={handlePaste}
               onCopyZone={handleCopyZone}
               onMarkZone={() => void handleMarkZone()}
-              onMarkUnusable={handleMarkUnusable}
+              onMarkUnusable={() => void handleMarkUnusable()}
+              onLabelUnusable={() => void handleLabelUnusable()}
               onClearUnusable={handleClearUnusable}
               onClear={() => setSelectedCells([])}
             />
@@ -1356,23 +1374,27 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
             <EntityActionMenu
               x={entityMenuPos.x}
               y={entityMenuPos.y}
-              canScaleUp={canScaleUp}
-              canScaleDown={canScaleDown}
               onCopy={handleCopy}
-              onScaleUp={handleScaleUp}
-              onScaleDown={handleScaleDown}
               onRotate={handleRotate}
               onDelete={handleDeleteSelected}
               onClose={() => setShowEntityMenu(false)}
             />
           )}
 
+          <GridNavBars
+            floor={floor}
+            viewport={viewport}
+            svgWidth={svgSize.width}
+            svgHeight={svgSize.height}
+            onViewport={setClampedViewport}
+          />
+
           <div className="status-bar">
             <span>
               cell ({Math.max(0, cursorCell.col)}, {Math.max(0, cursorCell.row)})
             </span>
             <span>
-              a={floor.a} · cell {gridCellSize.toFixed(2)} · L{gridLevel} · split {subdivision}x
+              a={floor.a} · cell {gridCellSize.toFixed(2)} · L{gridLevel}
             </span>
             <span>{snapEnabled ? 'Snap ON' : 'Snap OFF'}</span>
             <span>
@@ -1387,13 +1409,30 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
 
         <PropertiesPanel
           floor={floor}
-          subdivision={subdivision}
           onFloorChange={setFloor}
-          onSubdivisionChange={setSubdivision}
           selected={selectedEntities}
           onUpdateSelected={handleUpdateSelected}
           zones={zones}
           onDeleteZone={(id) => setZones((prev) => prev.filter((z) => z.id !== id))}
+          unusableRegions={unusableRegions}
+          onLabelUnusableRegion={(id) => {
+            void (async () => {
+              const r = unusableRegions.find((x) => x.id === id);
+              const label = await requestPrompt({
+                title: 'Unusable label',
+                placeholder: 'pillar',
+                defaultValue: r?.label ?? '',
+                confirmLabel: 'Save',
+              });
+              if (label === null) return;
+              setUnusableRegions((prev) =>
+                prev.map((x) => (x.id === id ? { ...x, label: label.trim() } : x)),
+              );
+            })();
+          }}
+          onDeleteUnusableRegion={(id) =>
+            setUnusableRegions((prev) => prev.filter((r) => r.id !== id))
+          }
           onExportJson={() => downloadFloorJson(buildDocument())}
           onCopyJson={() => {
             void navigator.clipboard.writeText(floorDocumentToJson(buildDocument()));
@@ -1412,14 +1451,16 @@ const FloorEditor: React.FC<FloorEditorProps> = ({ onOpenPretty }) => {
       <PromptToast
         request={promptReq}
         onCancel={() => {
-          promptResolve?.(null);
-          setPromptResolve(null);
+          const resolve = promptResolveRef.current;
+          promptResolveRef.current = null;
           setPromptReq(null);
+          resolve?.(null);
         }}
         onSubmit={(value) => {
-          promptResolve?.(value);
-          setPromptResolve(null);
+          const resolve = promptResolveRef.current;
+          promptResolveRef.current = null;
           setPromptReq(null);
+          resolve?.(value);
         }}
       />
       <MessageToast message={toastMsg} onClose={() => setToastMsg(null)} />

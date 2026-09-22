@@ -4,7 +4,7 @@ import type {
   FloorConfig,
   FloorZone,
   GridCell,
-  SubdivisionMode,
+  UnusableRegion,
 } from '../types/geometry';
 import type { Viewport } from '../types/viewport';
 
@@ -13,18 +13,49 @@ export type FloorDocument = {
   name?: string;
   savedAt?: string;
   a: number;
-  subdivision: SubdivisionMode;
   floor: FloorConfig;
   entities: Entity[];
   zones: FloorZone[];
   customLibrary: CustomLibraryEntry[];
-  /** Finest absolute cells marked unusable (irregular floor). */
+  unusableRegions?: UnusableRegion[];
+  /** @deprecated migrated to unusableRegions on load */
   unusableCells?: GridCell[];
+  /** @deprecated ignored */
+  subdivision?: 2 | 4;
   viewport?: Viewport;
   theme?: 'dark' | 'light';
 };
 
 const STORAGE_KEY = 'floor-planner-drafts-v2';
+
+export function normalizeUnusableRegions(doc: FloorDocument): UnusableRegion[] {
+  if (doc.unusableRegions && doc.unusableRegions.length > 0) {
+    return doc.unusableRegions;
+  }
+  if (doc.unusableCells && doc.unusableCells.length > 0) {
+    return [
+      {
+        id: `unusable-${Math.random().toString(36).slice(2, 10)}`,
+        label: '',
+        cells: doc.unusableCells,
+      },
+    ];
+  }
+  return [];
+}
+
+/** Strip deprecated fields when saving. */
+export function sanitizeDocument(doc: FloorDocument): FloorDocument {
+  const {
+    subdivision: _sub,
+    unusableCells: _cells,
+    ...rest
+  } = doc;
+  return {
+    ...rest,
+    unusableRegions: normalizeUnusableRegions(doc),
+  };
+}
 
 export function listDrafts(): FloorDocument[] {
   try {
@@ -44,7 +75,11 @@ function writeAll(drafts: FloorDocument[]): void {
 export function saveDraft(draft: FloorDocument): void {
   const name = draft.name ?? 'Untitled';
   const drafts = listDrafts().filter((d) => d.name !== name);
-  drafts.unshift({ ...draft, name, savedAt: new Date().toISOString() });
+  drafts.unshift({
+    ...sanitizeDocument(draft),
+    name,
+    savedAt: new Date().toISOString(),
+  });
   writeAll(drafts.slice(0, 40));
 }
 
@@ -57,7 +92,8 @@ export function deleteDraft(name: string): void {
 }
 
 export function downloadFloorJson(doc: FloorDocument, filename?: string): void {
-  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+  const clean = sanitizeDocument(doc);
+  const blob = new Blob([JSON.stringify(clean, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -67,5 +103,5 @@ export function downloadFloorJson(doc: FloorDocument, filename?: string): void {
 }
 
 export function floorDocumentToJson(doc: FloorDocument): string {
-  return JSON.stringify(doc, null, 2);
+  return JSON.stringify(sanitizeDocument(doc), null, 2);
 }

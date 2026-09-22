@@ -1,41 +1,18 @@
-Floor Planner- features and capabilities
-=======================================
+Floor Planner - capabilities
 
-Canvas & navigation
-- First-quadrant paper only: cannot pan into negative X/Y.
-- Origin (0,0) pinned to bottom-left on Fit / initial view.
-- Infinite grid continues up and right beyond the designated floor.
-- Area outside the configured floor is grayed (visible, not placeable).
-- Wheel zoom, pinch zoom, pan, snap, grid toggle.
-- Zoom split modes: 2x or 4x cell subdivision.
-
-Library & catalog
-- Category accordion library (one open at a time).
-- Types loaded from public/library-catalog.json with SVG previews.
-- Click type, then click canvas to place at finest cell size.
-- Custom polygons saved under Custom or a user-named category.
-- Delete custom library entries without removing placed objects.
-
-Placement & editing
-- Planner shows cell occupancy only (no furniture SVG on the grid).
-- Entity menu: Copy, Scale up, Scale down, Rotate 90° CCW (0/90/180/270), Delete.
-- Toolbar Delete removes the current selection.
-- Catalog items: discrete scale; polygons: free resize handles.
-- Drag to move; arrow keys nudge (Shift = ×4).
-
-Irregular floors & zones
-- Mark unusable cells to carve non-rectangular floors.
-- Clear unusable for a selection or all.
-- Mark as polygon → footprint + svgPath boundary for pretty-ui.
-- Mark zone with label and light tint; copy zone entities for paste.
-
-Data & pretty view
-- FloorDocument v2 JSON: category, elementType, objectId, rotation, unusableCells, zones.
-- Download / copy / load JSON; drafts in localStorage.
-- Pretty view renders catalog SVGs (with rotation) and polygon boundaries.
-- Returning from pretty view keeps the planner layout (editor stays mounted).
-- In-app prompts/toasts instead of browser alert/prompt dialogs.
-
-Export
-- PNG, SVG, PDF of the floor area (optional grid lines).
-- Light / dark theme.
+- First-quadrant infinite paper (x≥0, y≥0); designated floor is placeable; beyond is grayed
+- Fixed zoom levels: 2a → a → a/4 → a/16 (no 2x/4x toggle)
+- Default view at unit a; place on a/4; store on a/16 finest cells
+- Catalog types sized in a/4 cells with SVG previews in accordion library
+- Planner canvas shows cell occupancy only; Preview draws SVGs + polygon boundaries
+- Entity size is fixed; rotate 90° CCW (4 orientations); copy / delete
+- No entity scale-up / scale-down
+- Bottom + right nav bars for fast pan when zoomed in
+- Ctrl+drag selects cells even over placed entities (zones / polygons / unusable)
+- Named zones with light tint; zone label uses placeholder (e.g. team-1)
+- Unusable regions for irregular floors; optional labels (e.g. pillar); blocks overlap
+- Custom polygons under Custom (or new category); deletable from library; boundary svgPath for Preview
+- Sticky Preview top bar shows floor size as cols×rows (e.g. 128×128)
+- Floor JSON download / copy / load; localStorage drafts
+- Arbitrary unit a only (no meters/feet)
+- Undo/redo, snap, Fit, export PNG/SVG/PDF

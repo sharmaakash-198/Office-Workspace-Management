@@ -1,28 +1,26 @@
 import type { CellRef, GridCell, Point, Rect } from '../types/geometry';
-import { cellToWorldRect, getLevelCellSize } from './grid';
-import type { SubdivisionMode } from '../types/geometry';
+import { cellToWorldRect, FINEST_PER_A } from './grid';
 
 /**
- * Build relative finest-grid cells from a selection at any grid level.
- * Each selected cell is expanded into finest cells of size `a`.
+ * Build relative finest-grid (a/16) cells from a selection at any named grid level.
+ * `a` is the named unit (level 0).
  */
 export function cellsToRelativeFinest(
   cells: CellRef[],
-  baseUnit: number,
   a: number,
-  subdivision: SubdivisionMode,
 ): { origin: GridCell; widthCells: number; heightCells: number; cells: GridCell[] } | null {
   if (cells.length === 0) return null;
 
+  const f = a / FINEST_PER_A;
   const finest: GridCell[] = [];
   const seen = new Set<string>();
 
   for (const c of cells) {
-    const world = cellToWorldRect(c, baseUnit, subdivision);
-    const col0 = Math.round(world.x / a);
-    const row0 = Math.round(world.y / a);
-    const w = Math.max(1, Math.round(world.width / a));
-    const h = Math.max(1, Math.round(world.height / a));
+    const world = cellToWorldRect(c, a);
+    const col0 = Math.round(world.x / f);
+    const row0 = Math.round(world.y / f);
+    const w = Math.max(1, Math.round(world.width / f));
+    const h = Math.max(1, Math.round(world.height / f));
     for (let r = 0; r < h; r++) {
       for (let col = 0; col < w; col++) {
         const key = `${col0 + col},${row0 + r}`;
@@ -59,7 +57,7 @@ export function cellsToRelativeFinest(
   };
 }
 
-/** Trace outer boundary; returns vertices in cell-unit local coords (1 = one finest cell). */
+/** Trace outer boundary; returns vertices in finest-cell local coords. */
 export function outlineGridCells(cells: GridCell[]): Point[] {
   if (cells.length === 0) return [];
 
@@ -143,7 +141,6 @@ export function outlineGridCells(cells: GridCell[]): Point[] {
   return ring.map((v) => ({ x: v.x, y: v.y }));
 }
 
-/** SVG path `d` in cell-unit local coords (for pretty-ui boundary). */
 export function cellsToSvgPath(cells: GridCell[]): string {
   const outline = outlineGridCells(cells);
   if (outline.length < 2) {
@@ -165,9 +162,10 @@ export function cellsToWorldOutline(
   cells: GridCell[],
   a: number,
 ): Point[] {
+  const f = a / FINEST_PER_A;
   return outlineGridCells(cells).map((p) => ({
-    x: (origin.col + p.x) * a,
-    y: (origin.row + p.y) * a,
+    x: (origin.col + p.x) * f,
+    y: (origin.row + p.y) * f,
   }));
 }
 
@@ -184,33 +182,33 @@ export function pointInRelativeCells(
   cells: GridCell[],
   a: number,
 ): boolean {
-  const col = Math.floor(point.x / a) - origin.col;
-  const row = Math.floor(point.y / a) - origin.row;
+  const f = a / FINEST_PER_A;
+  const col = Math.floor(point.x / f) - origin.col;
+  const row = Math.floor(point.y / f) - origin.row;
   return cells.some((c) => c.col === col && c.row === row);
 }
 
-/** World AABB rects for relative cells. */
 export function relativeCellsWorldRects(
   origin: GridCell,
   cells: GridCell[],
   a: number,
 ): Rect[] {
+  const f = a / FINEST_PER_A;
   return cells.map((c) => ({
-    x: (origin.col + c.col) * a,
-    y: (origin.row + c.row) * a,
-    width: a,
-    height: a,
+    x: (origin.col + c.col) * f,
+    y: (origin.row + c.row) * f,
+    width: f,
+    height: f,
   }));
 }
 
-/** @deprecated legacy helper kept for tests migration */
+/** Legacy helper for tests: footprint from CellRefs using named `a`. */
 export function cellsToFootprint(
   cells: CellRef[],
-  baseUnit: number,
-  subdivision: SubdivisionMode = 4,
+  a: number,
 ): { origin: Point; width: number; height: number; footprint: Rect[] } | null {
   if (cells.length === 0) return null;
-  const worldRects = cells.map((c) => cellToWorldRect(c, baseUnit, subdivision));
+  const worldRects = cells.map((c) => cellToWorldRect(c, a));
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -268,7 +266,6 @@ export function footprintToOutline(
   }));
 }
 
-/** Point inside any footprint rect (world space) — legacy helper. */
 export function pointInFootprint(
   point: Point,
   originX: number,
@@ -289,5 +286,3 @@ export function pointInFootprint(
   }
   return false;
 }
-
-void getLevelCellSize;
