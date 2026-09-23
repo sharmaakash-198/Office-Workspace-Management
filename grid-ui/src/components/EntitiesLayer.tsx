@@ -136,7 +136,6 @@ const EntitiesLayer: React.FC<EntitiesLayerProps> = ({
         }
 
         const fontSize = shapeLabelSize(e, a, 0.28);
-        // AABB already reflects rotation (dims swapped around center) — no extra SVG rotate.
 
         return (
           <g
