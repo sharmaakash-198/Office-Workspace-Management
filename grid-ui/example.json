@@ -1,0 +1,98 @@
+{
+  "version": 2,
+  "a": 1,
+  "floor": {
+    "cols": 12,
+    "rows": 12,
+    "a": 1
+  },
+  "entities": [
+    {
+      "objectId": "corner-desk-1yuwmbmy",
+      "category": "workstation",
+      "elementType": "corner-desk",
+      "origin": {
+        "col": 96,
+        "row": 64
+      },
+      "widthCells": 24,
+      "heightCells": 16,
+      "rotation": 0,
+      "svg": "corner-desk.svg",
+      "label": "Corner desk",
+      "color": "#2563eb",
+      "fontSize": 0.4
+    },
+    {
+      "objectId": "computer-d8vn530u",
+      "category": "workstation",
+      "elementType": "computer",
+      "origin": {
+        "col": 80,
+        "row": 72
+      },
+      "widthCells": 16,
+      "heightCells": 8,
+      "rotation": 0,
+      "svg": "computer.svg",
+      "label": "Computer desk",
+      "color": "#3b82f6"
+    },
+    {
+      "objectId": "computer-swlrzjg6",
+      "category": "workstation",
+      "elementType": "computer",
+      "origin": {
+        "col": 80,
+        "row": 64
+      },
+      "widthCells": 16,
+      "heightCells": 8,
+      "rotation": 0,
+      "svg": "computer.svg",
+      "label": "Computer desk",
+      "color": "#3b82f6"
+    },
+    {
+      "objectId": "computer-qvo5zmyj",
+      "category": "workstation",
+      "elementType": "computer",
+      "origin": {
+        "col": 80,
+        "row": 56
+      },
+      "widthCells": 16,
+      "heightCells": 8,
+      "rotation": 0,
+      "svg": "computer.svg",
+      "label": "Computer desk",
+      "color": "#3b82f6",
+      "fontSize": 0.5
+    },
+    {
+      "objectId": "computer-187xp6kg",
+      "category": "workstation",
+      "elementType": "computer",
+      "origin": {
+        "col": 96,
+        "row": 56
+      },
+      "widthCells": 16,
+      "heightCells": 8,
+      "rotation": 0,
+      "svg": "computer.svg",
+      "label": "Computer desk",
+      "color": "#3b82f6",
+      "fontSize": 0.6
+    }
+  ],
+  "zones": [],
+  "customLibrary": [],
+  "unusableRegions": [],
+  "viewport": {
+    "zoom": 114.99044163953427,
+    "panX": -291.91184504871876,
+    "panY": 970
+  },
+  "theme": "light"
+}
