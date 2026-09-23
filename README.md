@@ -1,5 +1,5 @@
-## DESK-IT
-# Workspace Management System
+# DESK-IT
+### Workspace Management System
 ## Complete AI Handoff Specification
 
 ---
